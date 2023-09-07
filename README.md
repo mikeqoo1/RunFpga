@@ -2,7 +2,6 @@
 FPGA 的雜7雜8東西
 
 ## GitHub 官方庫
-
 [Vitis HLS 簡介範例](https://github.com/Xilinx/Vitis-HLS-Introductory-Examples)
 包含許多小型程式碼範例，示範良好的設計實踐、編寫規則、常用應用的設計模式以及（最重要的）最優化技巧，從而最大程度提升應用性能。所有範例都包含 README 文件和 run_hls.tcl 脚本以幫助您使用範例程式碼。
 
@@ -12,7 +11,13 @@ FPGA 的雜7雜8東西
 [Vitis 應用加速開發流程方法](https://github.com/Xilinx/Vitis-Tutorials)
 提供多種方法，通過這些方法可以學習有關工具流程和應用開發的具體概念，包括將 Vitis HLS 作為獨立應用來使用的方式，以及在 Vitis 自下而上的設計流程中使用該工具的方式。
 
+## 整理精華
+[HLS編寫指南](HLS編寫指南.md)
+
+
 
 ## 資料連結
 [技術文件](https://docs.xilinx.com/)
+
+[HLS stream types 的介紹](https://support.xilinx.com/s/question/0D54U00006am5AOSAY/hls-stream-types-fifo-pipo-shared-unsynq-what-do-they-do?language=zh_CN)
 
