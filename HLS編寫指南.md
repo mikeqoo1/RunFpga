@@ -38,7 +38,9 @@
 
 [官方例子](https://docs.xilinx.com/r/zh-CN/ug1399-vitis-hls/%E7%BB%84%E5%90%88%E4%B8%89%E7%A7%8D%E8%8C%83%E4%BE%8B)
 
-就是使出流水拍打 (#pragma HLS dataflow) 會幫你優化就對了
+就是使出流水拍打(數據流) (#pragma HLS dataflow) 會幫你優化就對了
+
+[DataFlow的概念](https://zhuanlan.zhihu.com/p/376273195)
 
 ## 總結
 

@@ -61,7 +61,7 @@ Vitis HLS 具有資料流的检查功能 啟用後可以檢查程式碼 是否�
 config_dataflow -strict_mode  (off | error | warning)
 ```
 
-## 指定FIFO/PIPO
+## Array指定FIFO/PIPO
 
 - 對於純量 Vitis HLS 會自動使用 FIFO 當通道類型
 
@@ -71,4 +71,58 @@ config_dataflow -strict_mode  (off | error | warning)
 PIPO 的優勢: PIPO 從不發生死鎖, 但需要耗用更多記憶體
 FIFO 的優勢: 要得記憶體少, 但如果 FIFO 大小設計不對, 則存在發生死鎖的可能
 如果任意順序訪問 通道必須是 PIPO 默認大小是原始陣列的2倍
+
+```c++
+void top ( ... ) {
+#pragma HLS dataflow
+  int A[1024];
+#pragma HLS stream type=pipo variable=A depth=3
+//depth參數 在 FIFO 代表大小 在 PIPO 代表深度(塊數)
+  
+  producer(A, B, …);  // producer writes A and B
+  middle(B, C, ...);  // middle reads B and writes C
+  consumer(A, C, …);  // consumer reads A and C
+```
+
+## 同步的串流
+
+標頭: #include "hls_streamofblocks.h"
+
+宣告: hls::stream_of_blocks<block_type, depth> v
+
+要使用使用 hls::write_lock 或 hls::read_lock 才能訪問該通道
+
+```c++
+#include "hls_streamofblocks.h"
+typedef int buf[N];
+void 生產者 (hls::stream_of_blocks<buf> &s, ...) {
+  for (int i = 0; i < M; i++) {
+    // 要宣告這個write_lock來寫入buf
+    hls::write_lock<buf> b(s);
+    for (int j = 0; j < N; j++)
+      b[f(j)] = ...;
+    // Deallocation of hls::write_lock releases the block for the consumer
+  }
+}
+  
+void 消費者(hls::stream_of_blocks<buf> &s, ...) {
+  for (int i = 0; i < M; i++) {
+    // 要宣告這個read_lock來讀取buf
+    hls::read_lock<buf> b(s);
+    for (int j = 0; j < N; j++)
+       ... = b[g(j)] ...;
+    // Deallocation of hls::write_lock releases the block to be reused by the producer
+  }
+}
+  
+void 主程式(...) {
+#pragma HLS dataflow
+  hls::stream_of_blocks<buf> s;
+  
+  生產者(b, ...);
+  消費者(b, ...);
+}
+```
+[using_stream_of_blocks範例](https://github.com/Xilinx/Vitis-HLS-Introductory-Examples/tree/master/Task_level_Parallelism/Control_driven/Channels/using_stream_of_blocks)
+
 
