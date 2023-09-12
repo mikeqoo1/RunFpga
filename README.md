@@ -21,3 +21,12 @@ FPGA 的雜7雜8東西
 
 [HLS stream types 的介紹](https://support.xilinx.com/s/question/0D54U00006am5AOSAY/hls-stream-types-fifo-pipo-shared-unsynq-what-do-they-do?language=zh_CN)
 
+## 要在 Linux 啟動 Vivado 要在 .bashrc 加入下面2行
+```bash
+source /data/tools/Xilinx/Vivado/2022.2/settings64.sh
+source /data/tools/Xilinx/Vitis_HLS/2022.2/settings64.sh
+source .bashrc
+vivado
+```
+
+[Vivado]()
