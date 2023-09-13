@@ -14,8 +14,6 @@ FPGA 的雜7雜8東西
 ## 整理精華
 [HLS編寫指南](HLS編寫指南.md)
 
-
-
 ## 資料連結
 [技術文件](https://docs.xilinx.com/)
 
@@ -23,10 +21,18 @@ FPGA 的雜7雜8東西
 
 ## 要在 Linux 啟動 Vivado 要在 .bashrc 加入下面2行
 ```bash
-source /data/tools/Xilinx/Vivado/2022.2/settings64.sh
-source /data/tools/Xilinx/Vitis_HLS/2022.2/settings64.sh
+source /data/tools/Xilinx/Vivado/2022.2/settings64.sh //Vivado 硬體開發
+source /data/tools/Xilinx/Vitis_HLS/2022.2/settings64.sh //Vitis_HLS 把 C/C++ To RTL Code
+source /data/tools/Xilinx/Vitis/2022.2/settings64.sh //Vitis Unified IDE
 source .bashrc
 vivado
+```
+
+## Vitas IDE 開不起來
+```bash
+先刪掉家目錄的東西
+rm -rf .Xilinx/Vitas
+https://support.xilinx.com/s/question/0D52E000073JXIvSAO/vitis-fails-to-launch-on-ubuntu-2110?language=zh_CN
 ```
 
 ![Vivado](/img/Vivado.png)

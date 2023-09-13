@@ -126,3 +126,4 @@ void 主程式(...) {
 [using_stream_of_blocks範例](https://github.com/Xilinx/Vitis-HLS-Introductory-Examples/tree/master/Task_level_Parallelism/Control_driven/Channels/using_stream_of_blocks)
 
 
+![Vivado執行畫面失敗](img/Vivado_error.png)
