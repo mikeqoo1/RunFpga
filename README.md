@@ -36,3 +36,17 @@ https://support.xilinx.com/s/question/0D52E000073JXIvSAO/vitis-fails-to-launch-o
 ```
 
 ![Vivado](/img/Vivado.png)
+
+## 設定授權
+
+```bash
+ Remember to set eth0
+ sudo vi /etc/default/grub
+ add “net.ifnames=0 biosdevname=0” to GRUB_CMDLINE_LINUX
+ sudo grub2-mkconfig
+ sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+ sudo vi /etc/sysconfig/network-scripts/ifcfg-xxx
+ sudo init 6
+ nmcli con show
+ nmtui
+```

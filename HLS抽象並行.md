@@ -78,7 +78,7 @@ void top ( ... ) {
   int A[1024];
 #pragma HLS stream type=pipo variable=A depth=3
 //depth參數 在 FIFO 代表大小 在 PIPO 代表深度(塊數)
-  
+
   producer(A, B, …);  // producer writes A and B
   middle(B, C, ...);  // middle reads B and writes C
   consumer(A, C, …);  // consumer reads A and C
@@ -104,7 +104,7 @@ void 生產者 (hls::stream_of_blocks<buf> &s, ...) {
     // Deallocation of hls::write_lock releases the block for the consumer
   }
 }
-  
+
 void 消費者(hls::stream_of_blocks<buf> &s, ...) {
   for (int i = 0; i < M; i++) {
     // 要宣告這個read_lock來讀取buf
@@ -114,11 +114,11 @@ void 消費者(hls::stream_of_blocks<buf> &s, ...) {
     // Deallocation of hls::write_lock releases the block to be reused by the producer
   }
 }
-  
+
 void 主程式(...) {
 #pragma HLS dataflow
   hls::stream_of_blocks<buf> s;
-  
+
   生產者(b, ...);
   消費者(b, ...);
 }
@@ -129,3 +129,77 @@ void 主程式(...) {
 ![Vivado執行畫面失敗](img/Vivado_error.png)
 
 ![Vitis_HLS](img/Vitis_HLS.png)
+
+
+## 使用資料跟控制驅動的模型
+
+![控制跟資料的模型差異](img/控制跟資料的模型差異.png)
+
+```c++
+const int N = 16;
+const int NP = 4; // 4個任務
+
+void worker(hls::stream<int> &in, hls::stream<int> &out) {
+    int i = in.read();
+    int o = i * 2 + 1;
+    printf("worker a[%d] b[%d]\n", i, o);
+    //Work 0
+    out.write(o);
+}
+
+void read_in(int *in, int n, hls::stream<int> &out) {
+    for (int i = 0; i < n; i++) {
+        printf("read_in a=%d\n", in[i]);
+        out.write(in[i]);
+    }
+}
+
+void write_out(hls::stream<int> &in, int *out, int n) {
+    for (int i = 0; i < n; i++) {
+        printf("write_out b=%d\n", out[i]);
+        out[i]= in.read();
+    }
+}
+
+void dut(int in[N], int out[N], int n) {
+#pragma HLS dataflow
+  hls_thread_local hls::split::round_robin<int, NP> split1; //array a
+  hls_thread_local hls::merge::round_robin<int, NP> merge1; //array b
+
+  read_in(in, n, split1.in); // 先讀取a array 的值 0~15
+
+  // Task-Channels
+  hls_thread_local hls::task t[NP]; // 4個任務
+  for (int i=0; i<NP; i++) {
+#pragma HLS unroll;
+    t[i](worker, split1.out[i], merge1.in[i]);
+  }
+
+  write_out(merge1.out, out, n);
+}
+
+int main() {
+    int a[N];
+    int b[N];
+    for (int i = 0; i<N; i++)
+        a[i] = i; // 初始化a
+    dut(a, b, N); // 進入dut
+    for (int i = 0; i<N; i++) {
+      printf("main  i=%d\n", i);
+      printf("main a[i]=%d\n", a[i]);
+      printf("main b[i]=%d\n", b[i]);
+        if (b[i] != a[i] * 2 + 1) {
+            printf("i=%d %d!=%d FAIL\n", i, b[i], a[i]*2+1);
+            return 1;
+        }
+    }
+    return 0;
+}
+```
+![混合流程](img/混合流程.png)
+# 這邊順便介紹 HLS 拆分/合併庫
+
+要用 hls::split<> 或 hls::merge<> 要include <hls_np_channel.h>
+拆分通道具有單一生產者和很多使用者, 通常可將任務分發给一系列工作程序在 RTL 中將分發羅邏輯加以抽象化並實現, 達到提升性能並且减少耗用的資源
+
+
