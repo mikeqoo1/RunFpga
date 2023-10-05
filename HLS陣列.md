@@ -134,3 +134,28 @@ int  array3[N];
 
 ![陣列重塑](/img/陣列重塑.png)
 
+## 參數上的Array
+
+假設把Array作為Top Function(頂層函數)的參數時 Vitis HLS 會採用下面的設定
+
+- 存儲器位於偏外, 且Vitis HLS會在接口上综合M_AXI端口, 以便訪問存儲器, 這是Vitis内核流程的默認行為
+- 存儲器為標準RAM, 延遲是1, 這是Vivado IP流程的默認行為 提供地址後經過1個時脈周期後, 資料會處在就緒狀態
+
+要配置Vitis HLS建造這些端口 要執行下列操作
+
+- 使用 INTERFACE 編譯指令把接口指定為 M_AXI BRAM 或 FIFO 接口
+- 使用 INTERFACE 編譯指令的 storage_type 選項, 將 RAM 指定為單端口或雙端口 RAM
+- 使用 INTERFACE 編譯指令的 latency 選項, 指定 RAM 延遲
+- 使用陣列最優化指令 ARRAY_PARTITION 或 ARRAY_RESHAPE 重新配置陣列結構 從而重新配置 I/O 端口的數量
+
+## Array接口
+
+https://docs.xilinx.com/r/zh-CN/ug1399-vitis-hls/%E9%98%B5%E5%88%97%E6%8E%A5%E5%8F%A3
+
+## FIFO 接口
+
+https://docs.xilinx.com/r/zh-CN/ug1399-vitis-hls/FIFO-%E6%8E%A5%E5%8F%A3
+
+## 存儲器映射接口
+
+https://docs.xilinx.com/r/zh-CN/ug1399-vitis-hls/%E5%AD%98%E5%82%A8%E5%99%A8%E6%98%A0%E5%B0%84%E6%8E%A5%E5%8F%A3
