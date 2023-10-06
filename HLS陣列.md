@@ -150,9 +150,51 @@ int  array3[N];
 
 ## Array接口
 
+INTERFACE編譯指令搭配storage_type=<value>選項來定義Array的類型 value預設是單端口的RAM, 雙端口可以縮短起時間或減少延遲
+
+ARRAY_PARTITION 和 ARRAY_RESHAPE 編譯指令可重配置接口上的Array, Array可分區為多個小的Array, 並且在各自接口單得實現 可以增加並行的可行性但是硬體資源會變多
+
+```c++
+#include "array_RAM.h"
+
+void array_RAM (dout_t d_o[4], din_t d_i[4], didx_t idx[4]) {
+  int i;
+
+  For_Loop: for (i=0;i<4;i++) {
+    d_o[i] = d_i[idx[i]];
+  }
+}
+```
+
 https://docs.xilinx.com/r/zh-CN/ug1399-vitis-hls/%E9%98%B5%E5%88%97%E6%8E%A5%E5%8F%A3
 
 ## FIFO 接口
+
+如果把Array當FIFO實現, 要確保Array的訪問順序
+d_i和d_o會被當作FIFO, 如果idx[i]是順序的話可以成立, 如果是隨機值, 那麼在模擬階段可能就會失敗了
+
+```c++
+#include "array_FIFO.h"
+
+void array_FIFO (dout_t d_o[4], din_t d_i[4], didx_t idx[4]) {
+  int i;
+#pragma HLS INTERFACE mode=ap_fifo port=d_i
+#pragma HLS INTERFACE mode=ap_fifo port=d_o
+  For_Loop: for (i=0;i<4;i++) {
+    d_o[i] = d_i[idx[i]];
+  }
+}
+```
+
+以下規則適合用在把Array當FIFO的時候:
+
+- 在Loop或函數中, Array必須只能是讀取或寫入 這是變為FIFO特徵的點對點連接
+- Array讀取與Array寫入的順序必須相同 針對FIFO通道不支持隨機訪問, 必須遵守先進先出的程序内使用Array
+
+
+
+
+
 
 https://docs.xilinx.com/r/zh-CN/ug1399-vitis-hls/FIFO-%E6%8E%A5%E5%8F%A3
 
