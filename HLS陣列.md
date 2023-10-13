@@ -191,13 +191,45 @@ void array_FIFO (dout_t d_o[4], din_t d_i[4], didx_t idx[4]) {
 - 在Loop或函數中, Array必須只能是讀取或寫入 這是變為FIFO特徵的點對點連接
 - Array讀取與Array寫入的順序必須相同 針對FIFO通道不支持隨機訪問, 必須遵守先進先出的程序内使用Array
 
-
-
-
-
-
 https://docs.xilinx.com/r/zh-CN/ug1399-vitis-hls/FIFO-%E6%8E%A5%E5%8F%A3
 
 ## 存儲器映射接口
 
+Vitis HLS允許Array指定為M_AXI接口, 這樣會把存儲器變為外部的, 而不是使用內部的, 所以訪問外部的會花更多時間
+
+Vitis HLS會執行自動突發最佳化, 有效讀取或寫入外部存儲器 突發是一種最優化方式, 會嘗試用智能方式聚集對DDR的存儲器訪問操作, 盡可能提升吞吐量或減少延遲突發是可對内核執行的諸多最優化操作之一, 突發通常能夠實現4到5倍的提升DDR端口上存在競爭(多個相互競爭的内核)
+
+
+[AXI介紹章節](https://docs.xilinx.com/r/zh-CN/ug1399-vitis-hls/AXI-%E7%B3%BB%E7%BB%9F%E6%80%A7%E8%83%BD%E6%9C%80%E4%BC%98%E5%8C%96)
+
+AXI4 協議的突發功能特性能夠通過在單個操作内, 在全局存储器上讀取或寫入多個資料塊來提升存儲功能的吞吐量, 資料越大, 吞吐量越高
+這種指標的計算方式如下: ((傳送的大小)*(內核頻率)/(時間))
+最大内核接口512位, 如果内核編譯假設300 MHz頻率, 理論上每個DDR可達成(512* 300 MHz)/1 秒 = ~17 GB/s
+
 https://docs.xilinx.com/r/zh-CN/ug1399-vitis-hls/%E5%AD%98%E5%82%A8%E5%99%A8%E6%98%A0%E5%B0%84%E6%8E%A5%E5%8F%A3
+
+## Array的初始化
+
+AMD建議用static的方式來宣告Array 這樣可以確保Vitis HLS以RTL中的存儲器來實做Array, 還允許使用static類型的默認初始化行為
+
+```c++
+/*
+每次執行時, 用於實現coeff的RAM都會隨這些值一起載入,
+對於單端口RAM, 此操作耗時8個週期, 對於1024陣列也就需要1024個週期, 在此期間沒辦法執行任何依賴coeff的運算
+*/
+int coeff[8] = {-2, 8, -4, 10, 14, 10, -4, 8, -2};
+/*
+用靜態的話, 會保留上次執行的值, 會跟RTL中的存儲器行為一樣
+
+如果變數包含static, Vitis HLS會對RTL設計和FPGA比特流中的變數做初始化
+不用經歷多個時脈週期來初始化存儲器, 可確保大型存儲器初始化不會產生任何運算開銷
+*/
+static int coeff[8] = {-2, 8, -4, 10, 14, 10, -4, 8, -2};
+```
+
+[比特流](https://xilinx.eetrend.com/blog/2022/100566476.html)
+
+
+## 網路資料
+
+[HLS之接口設計](https://blog.csdn.net/qq_53144843/article/details/127708508)

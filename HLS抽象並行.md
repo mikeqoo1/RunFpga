@@ -9,17 +9,17 @@
 void splitter(hls::stream<int> &in, hls::stream<int> &odds_buf, hls::stream<int> &evens_buf) {
     int data = in.read();
     if (data % 2 == 0)
-        evens_buf.write(data); //s2通道
+        evens_buf.write(data); //s2 通道
     else
-        odds_buf.write(data); //s1通道
+        odds_buf.write(data); //s1 通道
 }
 
 void odds(hls::stream<int> &in, hls::stream<int> &out) {
-    out.write(in.read() + 1); //s1通道
+    out.write(in.read() + 1); //s1 通道
 }
 
 void evens(hls::stream<int> &in, hls::stream<int> &out) {
-    out.write(in.read() + 2); //s2通道
+    out.write(in.read() + 2); //s2 通道
 }
 
 void odds_and_evens(hls::stream<int> &in, hls::stream<int> &out1, hls::stream<int> &out2) {
@@ -34,19 +34,19 @@ void odds_and_evens(hls::stream<int> &in, hls::stream<int> &out1, hls::stream<in
     hls_thread_local hls::task t3(evens, s2, out2);
 }
 ```
-![TLP的資料驅動](/img/TLP的資料驅動.png "TLP的資料驅動")
+![TLP 的資料驅動](/img/TLP 的資料驅動.png "TLP 的資料驅動")
 
 控制驅動的範本就是上一章的流水拍打
 
-## Vitis HLS的優化有一些規定
+## Vitis HLS 的優化有一些規定
 
 1. 沒有關聯性的函數, 裡面沒有變數初始化的設定, 函數之間沒有改同一個值的關係
 
-2. 迴圈 要0開始 每次遞增1 資料流需要在迴圈內 其他跟第1點一樣
+2. 迴圈 要 0 開始 每次遞增 1 資料流需要在迴圈內 其他跟第 1 點一樣
 
-在以下的條件下只能照順序把變數A從函數A給到函數B
+在以下的條件下只能照順序把變數 A 從函數 A 給到函數 B
 
-變數只能包含 1 個讀Process和 1 個寫Process
+變數只能包含 1 個讀 Process 和 1 個寫 Process
 
 如果是用函數的參數 寫入步驟要在讀之前
 
@@ -55,29 +55,29 @@ void odds_and_evens(hls::stream<int> &in, hls::stream<int> &out1, hls::stream<in
 ## 資料流向檢查
 
 Vitis HLS 具有資料流的检查功能 啟用後可以檢查程式碼 是否符合建議的規範
-預設情況下是warning 要改的話可以用以下設定
+預設情況下是 warning 要改的話可以用以下設定
 
 ```txt
 config_dataflow -strict_mode  (off | error | warning)
 ```
 
-## Array指定FIFO/PIPO
+## Array 指定 FIFO/PIPO
 
 - 對於純量 Vitis HLS 會自動使用 FIFO 當通道類型
 
 - 如果是用陣列的方式當參數 可以選擇用哪一個當通道
 
-如果始终照顺序可以用FIFO/PIPO
+如果始终照顺序可以用 FIFO/PIPO
 PIPO 的優勢: PIPO 從不發生死鎖, 但需要耗用更多記憶體
 FIFO 的優勢: 要得記憶體少, 但如果 FIFO 大小設計不對, 則存在發生死鎖的可能
-如果任意順序訪問 通道必須是 PIPO 默認大小是原始陣列的2倍
+如果任意順序訪問 通道必須是 PIPO 默認大小是原始陣列的 2 倍
 
 ```c++
 void top ( ... ) {
 #pragma HLS dataflow
   int A[1024];
 #pragma HLS stream type=pipo variable=A depth=3
-//depth參數 在 FIFO 代表大小 在 PIPO 代表深度(塊數)
+//depth 參數 在 FIFO 代表大小 在 PIPO 代表深度(塊數)
 
   producer(A, B, …);  // producer writes A and B
   middle(B, C, ...);  // middle reads B and writes C
@@ -97,7 +97,7 @@ void top ( ... ) {
 typedef int buf[N];
 void 生產者 (hls::stream_of_blocks<buf> &s, ...) {
   for (int i = 0; i < M; i++) {
-    // 要宣告這個write_lock來寫入buf
+    // 要宣告這個 write_lock 來寫入 buf
     hls::write_lock<buf> b(s);
     for (int j = 0; j < N; j++)
       b[f(j)] = ...;
@@ -107,7 +107,7 @@ void 生產者 (hls::stream_of_blocks<buf> &s, ...) {
 
 void 消費者(hls::stream_of_blocks<buf> &s, ...) {
   for (int i = 0; i < M; i++) {
-    // 要宣告這個read_lock來讀取buf
+    // 要宣告這個 read_lock 來讀取 buf
     hls::read_lock<buf> b(s);
     for (int j = 0; j < N; j++)
        ... = b[g(j)] ...;
@@ -123,10 +123,10 @@ void 主程式(...) {
   消費者(b, ...);
 }
 ```
-[using_stream_of_blocks範例](https://github.com/Xilinx/Vitis-HLS-Introductory-Examples/tree/master/Task_level_Parallelism/Control_driven/Channels/using_stream_of_blocks)
+[using_stream_of_blocks 範例](https://github.com/Xilinx/Vitis-HLS-Introductory-Examples/tree/master/Task_level_Parallelism/Control_driven/Channels/using_stream_of_blocks)
 
 
-![Vivado執行畫面失敗](img/Vivado_error.png)
+![Vivado 執行畫面失敗](img/Vivado_error.png)
 
 ![Vitis_HLS](img/Vitis_HLS.png)
 
@@ -137,7 +137,7 @@ void 主程式(...) {
 
 ```c++
 const int N = 16;
-const int NP = 4; // 4個任務
+const int NP = 4; // 4 個任務
 
 void worker(hls::stream<int> &in, hls::stream<int> &out) {
     int i = in.read();
@@ -166,10 +166,10 @@ void dut(int in[N], int out[N], int n) {
   hls_thread_local hls::split::round_robin<int, NP> split1; //array a
   hls_thread_local hls::merge::round_robin<int, NP> merge1; //array b
 
-  read_in(in, n, split1.in); // 先讀取a array 的值 0~15
+  read_in(in, n, split1.in); // 先讀取 a array 的值 0~15
 
   // Task-Channels
-  hls_thread_local hls::task t[NP]; // 4個任務
+  hls_thread_local hls::task t[NP]; // 4 個任務
   for (int i=0; i<NP; i++) {
 #pragma HLS unroll;
     t[i](worker, split1.out[i], merge1.in[i]);
@@ -182,8 +182,8 @@ int main() {
     int a[N];
     int b[N];
     for (int i = 0; i<N; i++)
-        a[i] = i; // 初始化a
-    dut(a, b, N); // 進入dut
+        a[i] = i; // 初始化 a
+    dut(a, b, N); // 進入 dut
     for (int i = 0; i<N; i++) {
       printf("main  i=%d\n", i);
       printf("main a[i]=%d\n", a[i]);
@@ -199,7 +199,7 @@ int main() {
 ![混合流程](img/混合流程.png)
 # 這邊順便介紹 HLS 拆分/合併庫
 
-要用 hls::split<> 或 hls::merge<> 要include <hls_np_channel.h>
+要用 hls::split<> 或 hls::merge<> 要 include <hls_np_channel.h>
 拆分通道具有單一生產者和很多使用者, 通常可將任務分發给一系列工作程序在 RTL 中將分發羅邏輯加以抽象化並實現, 達到提升性能並且减少耗用的資源
 
 
