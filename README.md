@@ -11,6 +11,8 @@ FPGA 的雜 7 雜 8 東西
 [Vitis 應用加速開發流程方法](https://github.com/Xilinx/Vitis-Tutorials)
 提供多種方法，通過這些方法可以學習有關工具流程和應用開發的具體概念，包括將 Vitis HLS 作為獨立應用來使用的方式，以及在 Vitis 自下而上的設計流程中使用該工具的方式。
 
+[Vitis HLS Coding Styles整理](https://busy-bob.github.io/post/vitis-hls-coding-styles/)
+
 ## 整理精華
 [HLS 編寫指南](HLS 編寫指南.md)
 
