@@ -191,8 +191,207 @@ HLS 綜合並不保證使用相同的内存或者暫存器
 
 - const 常量或者 ROM
 
-## 任意精確度 (AP) 資料類型
+## 任意精確度 (AP) 資料類型優點
 
+C/C++ 的原生資料類型都在 8 位邊界(8 位, 16 位, 32 位和 64 位)上 但是，RTL (對於硬體)支持任意資料長度 標準 C/C++ 資料類型可能導致硬體實現效率不好
+例如: AMD 中的基本乘法單位是 DSP 庫單元 32 位"ints"整數乘法需要多個 DSP 單元, 而使用任意精度類型則可以每次乘法只使用一個單元
 
+任意精度 (AP) 資料類型會讓程式碼使用寬度更小的變數, C/C++ 仿真階段還不會受影響, 比較小的寬度生的硬體運算會更小更快, 這樣在 FPGA 中可以部屬更多邏輯, 並且也允許用更高的時脈來處理
 
+AP 資料類型的缺點之一是 Array 不會以 0 自動初始化 如果要初始化 Array 要手動執行
 
+範例: 我有寫在192.168.199.2 (aptype) 會有跟原生的型態有比對 反正就是比較快
+
+## 任意整數的資料類型
+
+| 語言 | 資料類型 | 要的標頭檔 |
+| :----: | :----: | :----: |
+| C++ | ap_[u]int<W> (1024 bit) 可以拓展到 4096 bit | #include "ap_int.h" |
+| C++ | ap_[u]fixed<W,I,Q,O,N> | #include "ap_fixed.h" |
+
+| 符號 | 意義 |
+| :----: | :----: |
+| W | 寬度 |
+| I | 整數的位數, 隱含正負號 |
+| Q | 量化模式：規定當生成的精準度大於儲存的變數中的最小小數位數的行為 反正就是小數位數大於要存的變數小數位數啦 |
+| O | 上溢模式：規定運結果大於儲存變數的最大值的行為 就是超過要存的變數的極值 int64 放到 int32 |
+
+| 量化模式 | 描述 |
+| :----: | :----: |
+| AP_RND | 捨入到正無窮 |
+| AP_RND_ZERO | 捨入到 0 |
+| AP_RND_MIN_INF | 捨入到負無窮 |
+| AP_RND_INF | 捨入到無窮 |
+| AP_RND_CONV | 收斂捨入 |
+| AP_TRN | 截位到負無窮(預設) |
+| AP_TRN_ZERO | 截位到 0 |
+| 上溢模式 | 描述 |
+| :----: | :----: |
+| AP_SAT | 飽和 |
+| AP_SAT_ZERO  | 飽和到 0 |
+| AP_SAT_SYM  | 對稱飽和 |
+| AP_WRAP | 捲繞(預設) |
+| AP_WRAP_SM | 正負符號捲繞 |
+
+```c++
+#include "ap_int.h"
+
+// 如果要到4096 可以用AP_INT_MAX_W來定義 預設是1024 但是數字越大 編譯跟執行的時間就會變久
+#define AP_INT_MAX_W 4096
+ap_int<9> var1; // 9-bit
+ap_uint<10> var2; // 10-bit unsigned
+```
+
+## 任意浮點數的資料類型
+
+```c++
+#include <ap_fixed.h>
+
+ap_fixed 類型用來定義 18 位變數, 其中 6 位(包含正負號)指定為表示小數點前的數字, 剩下 12 位則是小數點後的值 (都是用2進位表示)
+ap_fixed<18,6,AP_RND> t1 = 1.5; // internally represented as 0b00'0001.1000'0000'0000 (0x01800)
+ap_fixed<18.6,AP_RND> t2 = -1.5; // 0b11'1110.1000'0000'0000 (0x3e800)
+
+```
+
+[複習一下](https://kknews.cc/zh-tw/invest/qlm8m4g.html)
+
+## 指標
+
+指標在 C/C++ 中可以用, 也支持综合, 但他們建議避免使用指標 在以下情況下使用指標時候更是如此:
+
+- 在同一函數内多次訪問(讀取或寫入)指標 (陣列那邊有講過)
+- 使用指標陣列, 每個指標都必須指向 1 個純量或純量阵列(而不是另一指標)
+- 只支持標準 C/C++ 間的指標强制轉換
+
+[指標範例](https://github.com/Xilinx/Vitis-HLS-Introductory-Examples/tree/master/Modeling/Pointers)
+
+一些例子:
+
+1. 指標指向多個對象
+
+```c++
+dout_t pointer_multi (sel_t sel, din_t pos) {
+    static const dout_t a[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+    static const dout_t b[8] = {8, 7, 6, 5, 4, 3, 2, 1};
+    dout_t* ptr;
+
+    if (sel)
+        ptr = a; 
+    else
+        ptr = b;
+
+    return ptr[pos];
+} 
+```
+
+2. HLS 有支援雙指標(應該也不常用), 但是頂層函數沒有支持, 簡易是不要用太多, 會增加執行的時間
+
+```c++
+data_t sub(data_t ptr[10], data_t size, data_t**flagPtr)
+{
+    data_t x, i;
+
+    x = 0;
+    // Sum x if AND of local index and pointer to pointer index is true
+    for(i=0; i<size; ++i)
+        if (**flagPtr & i)
+            x += *(ptr+i);
+    return x;
+}
+
+// 這邊不能用雙指標
+data_t pointer_double(data_t pos, data_t x, data_t* flag)
+{
+    data_t array[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    data_t* ptrFlag;
+    data_t i;
+
+    ptrFlag = flag;
+
+    // Write x into index position pos
+    if (pos >=0 & pos < 10) 
+        *(array+pos) = x;
+
+    // Pass same index (as pos) as pointer to another function
+    return sub(array, 10, &ptrFlag);
+}
+```
+
+3. 指標陣列也是可以用的, 注意指標只能只到純量或是陣列, 不能再指給其他指標
+
+```c++
+data_t A[N][10];
+
+data_t pointer_array(data_t B[N*10]) {
+    data_t i,j;
+    data_t sum1;
+
+    // Array of pointers
+    data_t* PtrA[N];
+
+    // Store global array locations in temp pointer array
+    for (i=0; i<N; ++i) 
+        PtrA[i] = &(A[i][0]);
+
+    // Copy input array using pointers
+    for(i=0; i<N; ++i) 
+        for(j=0; j<10; ++j) 
+            *(PtrA[i]+j) = B[i*10 + j];
+
+    // Sum input array
+    sum1 = 0;
+    for(i=0; i<N; ++i)
+        for(j=0; j<10; ++j) 
+            sum1 += *(PtrA[i] + j);
+
+    return sum1;
+}
+```
+
+4. HLS 支援原生類型的指標做強制轉型, struct 那種複合的就不行
+
+```c++
+typedef int data_t;
+typedef char dint_t;
+
+data_t pointer_cast_native (data_t index, data_t A[N]) {
+    dint_t* ptr;
+    data_t i =0, result = 0;
+    ptr = (dint_t*)(&A[index]);// int 會被強制轉成 char
+
+    // Sum from the indexed value as a different type
+    for (i = 0; i < 4*(N/10); ++i) {
+        result += *ptr;
+        ptr+=1;
+    }
+    return result;
+} 
+```
+
+## 參數上的指標
+
+在頂層函數上, 指標會綜合的有線接口或是使用握手的接口協議 (只有限只讀或寫得才能綜合為 FIFO 接口)
+
+```c++
+void pointer_basic (dio_t *d) {
+    static dio_t acc = 0;
+    acc += *d;
+    *d  = acc;
+}
+```
+
+參數有多個指標 (書上建議是不要這樣用拉, 儘量用 hls::stream 來代替), 避免困難
+
+```c++
+這是錯誤的範例, 綜合後會有意外行為, 指標 d_i 做了 4 次讀, 指標 d_o 做了 2 次寫, 指標做了多次訪問
+void pointer_stream_bad (dout_t *d_o, din_t *d_i) {
+    din_t acc = 0;
+
+    acc += *d_i;
+    acc += *d_i;
+    *d_o = acc;
+    acc += *d_i;
+    acc += *d_i;
+    *d_o = acc;
+}
+```
