@@ -40,6 +40,15 @@ void foo_top { a, b, c, d} {
 }
 ```
 
+### 甚麼都沒加
+![INLINE程式碼](img/INLINE程式碼.png)
+![INLINE程式碼報告](img/INLINE程式碼報告.png)
+
+### 關掉INLINE
+![INLINE程式碼1](img/INLINE程式碼1.png)
+![INLINE程式碼報告1](img/INLINE程式碼報告1.png)
+
+
 ## 函數的流水拍打
 
 請看常用名詞的重要指令說明
