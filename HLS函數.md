@@ -404,3 +404,25 @@ void pointer_stream_bad (dout_t *d_o, din_t *d_i) {
     *d_o = acc;
 }
 ```
+
+## 理解易變變數
+
+Volatile 關鍵字 這個我真陌生... [解釋](https://freestyler.pixnet.net/blog/post/23872864)
+
+上面的要改好的話 就是把 *d_o 跟 *d_i 加上 volatile 讓 C/C++ 編譯器和 Vitis HLS, 不設定指標訪問次數, 且不要優化! 就是易變變數 可以更改
+
+volatile 限定符：
+- 不會讓指標最優化
+- 生成的 RTL 設計會對輸入端口 d_i 執行期望的 4 次讀取, 對輸出端口 d_o 執行 2 次寫入
+
+## 對串流数据接口進行建模
+
+[對串流数据接口進行建模](https://docs.xilinx.com/r/zh-CN/ug1399-vitis-hls/%E5%AF%B9%E4%B8%B2%E6%B5%81%E6%95%B0%E6%8D%AE%E6%8E%A5%E5%8F%A3%E8%BF%9B%E8%A1%8C%E5%BB%BA%E6%A8%A1)
+
+## Vector
+
+AMD Vitis™ HLS 可提供 hls::vector<T, N>
+
+T: 類型, 也可以是自定義的
+N: 數量, 必須是正整數 當 T 的寬度和 N 都是 2 的倍數就可以實現最佳效能
+
