@@ -457,5 +457,3 @@ malloc() alloc() 和 free()
 
 - 第七類虛擬函數 (virtual) 和虛指標
 
-## 實作看看
-
