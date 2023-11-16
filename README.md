@@ -28,6 +28,7 @@ source /data/tools/Xilinx/Vitis_HLS/2022.2/settings64.sh //Vitis_HLS 把 C/C++ T
 source /data/tools/Xilinx/Vitis/2022.2/settings64.sh //Vitis Unified IDE
 source /opt/xilinx/xrt/setup.sh //set up XILINX_XRT
 export PLATFORM_REPO_PATHS=<path to platforms> /data/tools/Xilinx/Vitis/2022.2/platforms
+export PLATFORM_REPO_PATHS=/opt/xilinx/platforms/xilinx_u50_gen3x16_xdma_5_202210_1 ㄧ
 source .bashrc
 vivado
 ```
