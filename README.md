@@ -11,7 +11,7 @@ FPGA 的雜 7 雜 8 東西
 [Vitis 應用加速開發流程方法](https://github.com/Xilinx/Vitis-Tutorials)
 提供多種方法，通過這些方法可以學習有關工具流程和應用開發的具體概念，包括將 Vitis HLS 作為獨立應用來使用的方式，以及在 Vitis 自下而上的設計流程中使用該工具的方式。
 
-[Vitis HLS Coding Styles整理](https://busy-bob.github.io/post/vitis-hls-coding-styles/)
+[Vitis HLS Coding Styles 整理](https://busy-bob.github.io/post/vitis-hls-coding-styles/)
 
 ## 整理精華
 [HLS 編寫指南](HLS 編寫指南.md)
@@ -23,8 +23,8 @@ FPGA 的雜 7 雜 8 東西
 
 ## 要在 Linux 啟動 Vivado 要在 .bashrc 加入下面 2 行
 ```bash
-source /data/tools/Xilinx/Vivado/2022.2/settings64.sh //Vivado 硬體開發
-source /data/tools/Xilinx/Vitis_HLS/2022.2/settings64.sh //Vitis_HLS 把 C/C++ To RTL Code
+source /data/tools/Xilinx/Vivado/2022.2/settings64.sh//Vivado 硬體開發
+source /data/tools/Xilinx/Vitis_HLS/2022.2/settings64.sh//Vitis_HLS 把 C/C++ To RTL Code
 source /data/tools/Xilinx/Vitis/2022.2/settings64.sh //Vitis Unified IDE
 source /opt/xilinx/xrt/setup.sh //set up XILINX_XRT
 export PLATFORM_REPO_PATHS=<path to platforms> /data/tools/Xilinx/Vitis/2022.2/platforms
@@ -55,3 +55,5 @@ https://support.xilinx.com/s/question/0D52E000073JXIvSAO/vitis-fails-to-launch-o
  nmcli con show
  nmtui
 ```
+
+[AMD 論壇](https://support.xilinx.com/s/?language=zh_CN)
