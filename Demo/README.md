@@ -1,4 +1,4 @@
-# Demo
+# Vitis HLS Demo
 
 [線上計算機](<https://matrixcalc.org/zh-TW/#%7B%7B0,1,2,3%7D,%7B4,5,6,7%7D,%7B8,9,10,11%7D,%7B12,13,14,15%7D%7D*%7B%7B0,1,2,3%7D,%7B4,5,6,7%7D,%7B8,9,10,11%7D,%7B12,13,14,15%7D%7D>)
 
@@ -127,7 +127,11 @@ array_reshape 和 array_partion 都提高了一個頻率内可以讀取的陣列
 
 把大矩陣拆分成一塊一塊的小矩陣做運算在整合
 
+# Vivado Demo
+
+先想辦法開啟 vivado, 然後新建專案，接著按 PROJECT MAMAGER 的 Setting 裡面有個 IP 點 Repository 把 Vitis HLS 的專案加進來
+
+然後按 OK 退回主畫面去點 Create Block Design 按 + 的符號 搜尋 Processing System 加入然後記得按 Run Connection Automation 連線在把我們寫的 IP 匯入 然後再按 Run Connection Automation 自動接線 接完後按圖示上的確認 沒問題後去 Sources 打包 (Creatr HDL Wrapper)
 
 
-
-
+![Alt text](image-12.png)
