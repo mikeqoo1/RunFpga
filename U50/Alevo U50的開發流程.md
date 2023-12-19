@@ -10,11 +10,6 @@ kernel code 通常是 C/C++/HLS/RTL 程式碼，最後變成 PL 硬件，host co
 要改 C++17
 ![Alt text](image.png)
 
-
-
-
-
-
 [XRT 的文件](https://xilinx.github.io/XRT/master/html/platforms.html)
 
 # U50 設定 Vitis HLS
