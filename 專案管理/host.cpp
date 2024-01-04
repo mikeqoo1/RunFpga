@@ -6,13 +6,13 @@
 #include <xrt/xrt_bo.h>
 #include <xrt/xrt_kernel.h>
 #include <experimental/xrt_ip.h>
-#include <experimental/aie.h>
-#include <experimental/graph.h>
 #define DATA_SIZE 4096
 #define INCR_VALUE 10
 
-int main(int argc, char** argv) {
-	if (argc != 2) {
+int main(int argc, char **argv)
+{
+	if (argc != 2)
+	{
 		std::cout <<"FPGA 執行檔案:" << argv [0] << "<XCLBIN File>" << std::endl;
 		return EXIT_FAILURE;
 	}
@@ -27,16 +27,17 @@ int main(int argc, char** argv) {
 	size_t vector_size_bytes = sizeof(int) * DATA_SIZE;
 
 	//aligned_allocator 這是 C++ 的 STL
-	std::vector<int, aligned_allocator<int> > source_input(DATA_SIZE);
-	std::vector<int, aligned_allocator<int> > source_hw_results(DATA_SIZE);
-	std::vector<int, aligned_allocator<int> > source_sw_results(DATA_SIZE);
+	std::vector<int, aligned_allocator<int>> source_input(DATA_SIZE);
+	std::vector<int, aligned_allocator<int>> source_hw_results(DATA_SIZE);
+	std::vector<int, aligned_allocator<int>> source_sw_results(DATA_SIZE);
 
 	// 建立測試數據和軟體結果
-	for (int i = 0; i < DATA_SIZE; i++) {
+	for (int i = 0; i < DATA_SIZE; i++)
+	{
 		source_input[i] = i;
 		source_sw_results[i] = i + INCR_VALUE;
 		source_hw_results[i] = 0;
-		std::cout << "source_input=" << source_input[i] << "|source_sw_results=" << source_sw_results[i] << "|source_hw_results=" << source_hw_results[i] << std::endl;
+		// std::cout << "source_input=" << source_input[i] << "|source_sw_results=" << source_sw_results[i] << "|source_hw_results=" << source_hw_results[i] << std::endl;
 	}
 
 	// 去拿板子資訊
@@ -46,7 +47,8 @@ int main(int argc, char** argv) {
 	auto fileBuf = xcl::read_binary_file(binaryFile);
 	cl::Program::Binaries bins{{fileBuf.data(), fileBuf.size()}};
 	bool valid_device = false;
-	for (unsigned int i = 0; i < devices.size(); i++) {
+	for (unsigned int i = 0; i < devices.size(); i++)
+	{
 		auto device = devices[i];
 		// Creating Context and Command Queue for selected Device
 		OCL_CHECK(err, context = cl::Context(device, nullptr, nullptr, nullptr, &err));
@@ -54,16 +56,20 @@ int main(int argc, char** argv) {
 
 		std::cout << "Trying to program device[" << i << "]: " << device.getInfo<CL_DEVICE_NAME>() << std::endl;
 		cl::Program program(context, {device}, bins, nullptr, &err);
-		if (err != CL_SUCCESS) {
+		if (err != CL_SUCCESS)
+		{
 			std::cout << "Failed to program device[" << i << "] with xclbin file!\n";
-		} else {
+		}
+		else
+		{
 			std::cout << "Device[" << i << "]: program successful!\n";
 			OCL_CHECK(err, krnl_adder = cl::Kernel(program, "adder", &err));
 			valid_device = true;
 			break; // we break because we found a valid device
 		}
 	}
-	if (!valid_device) {
+	if (!valid_device)
+	{
 		std::cout << "Failed to program any device found, exit!\n";
 		exit(EXIT_FAILURE);
 	}
@@ -97,8 +103,12 @@ int main(int argc, char** argv) {
 
 	// 比對結果
 	int match = 0;
-	for (int i = 0; i < DATA_SIZE; i++) {
-		if (source_hw_results[i] != source_sw_results[i]) {
+	for (int i = 0; i < DATA_SIZE; i++)
+	{
+		std::cout <<"硬體 source_hw_results=" << source_hw_results [i] << std::endl;
+		std::cout <<"軟體 source_sw_results=" << source_sw_results [i] << std::endl;
+		if (source_hw_results[i] != source_sw_results[i])
+		{
 			std::cout << "Error: Result mismatch" << std::endl;
 			std::cout << "i = " << i << " CPU result = " << source_sw_results[i]
 					  << " Device result = " << source_hw_results[i] << std::endl;
@@ -110,5 +120,3 @@ int main(int argc, char** argv) {
 	std::cout << "TEST " << (match ? "FAILED" : "PASSED") << std::endl;
 	return (match ? EXIT_FAILURE : EXIT_SUCCESS);
 }
-
-
