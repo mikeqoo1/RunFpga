@@ -1,14 +1,71 @@
+// FPGA 相關
 #include "xcl2.hpp"
-#include <vector>
-#include <iostream>
 #include <xrt/xrt_device.h>
 #include <experimental/xrt_xclbin.h>
 #include <xrt/xrt_bo.h>
 #include <xrt/xrt_kernel.h>
 #include <experimental/xrt_ip.h>
+
+#include <vector>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+
 #define DATA_SIZE 4096
 int main(int argc, char **argv)
 {
+    // 商業邏輯
+    std::vector<int, aligned_allocator<int>> customer_data(DATA_SIZE);
+    std::vector<int, aligned_allocator<int>> customer_ans(DATA_SIZE);
+    std::vector<int, aligned_allocator<int>> customer_ans_sw({0, 0, 0, 999, 999, 0, 999, 999, 0, 0});
+
+    // 拿大戶資料
+    std::string filePath = "大戶資料.txt";
+    std::ifstream inputFile(filePath);
+    if (!inputFile.is_open())
+    {
+        std::cerr << "無法打開檔案:" << filePath << std::endl;
+        return 1;
+    }
+
+    std::string line;
+    int index = 0;
+    while (std::getline(inputFile, line))
+    {
+        std::cout << line << std::endl;
+        std::stringstream ss(line);
+        std::string token;
+
+        int count = 0;
+        while (std::getline(ss, token, '|'))
+        {
+            count++;
+            if (token.find_first_not_of("0123456789") == std::string::npos)
+            {
+                int num = std::stoi(token);
+                if (count == 2)
+                {
+                    std::cout << "額度:" << num << std::endl;
+                    customer_data[index] = num;
+                }
+                else if (count == 3)
+                {
+                    std::cout << "已用:" << num << std::endl;
+                    customer_data[index] = num;
+                }
+                index += 1;
+            }
+            else
+            {
+                std::cout << "姓名:" << token << std::endl;
+            }
+        }
+    }
+
+    // 關閉檔案
+    inputFile.close();
+
     if (argc != 2)
     {
         std::cout <<"FPGA 執行檔案:" << argv [0] << "<XCLBIN File>" << std::endl;
@@ -17,20 +74,20 @@ int main(int argc, char **argv)
 
     auto binaryFile = argv[1];
 
-    // 分配記憶體
     cl_int err;
     cl::Context context;
     cl::CommandQueue q;
-    cl::Kernel risk_check;
+    cl::Kernel risk_check; // 宣告核心變數
+
+    // 這邊是為了要做資料對齊 xcl2 裡面有寫 記憶體在 4096 Byte 上對齊
     size_t vector_size_bytes = sizeof(int) * DATA_SIZE;
 
-    std::vector<int, aligned_allocator<int>> customer_data(DATA_SIZE); //= {50, 66, 78, 105, 123, 5, 689, 456, 98, 24};
-    std::vector<int, aligned_allocator<int>> customer_ans(DATA_SIZE);
-
-    // 結果應該長這樣
-    std::vector<int, aligned_allocator<int>> customer_ans_sw(DATA_SIZE); //= {0, 0, 0, 999, 999, 0, 999, 999, 0, 0};
+    // 這邊我就直接給測試資料了
+    // std::vector<int, aligned_allocator<int>> customer_data({50, 66, 78, 105, 123, 5, 689, 456, 98, 24});
+    //std::vector<int, aligned_allocator<int>> customer_ans_sw ({0, 0, 0, 999, 999, 0, 999, 999, 0, 0}); // 結果應該長這樣
 
     // 產生資料
+    /*
     for (int i = 0; i < 10; i++)
     {
         if (i == 0)
@@ -85,6 +142,7 @@ int main(int argc, char **argv)
         }
         customer_ans[i] = 0;
     }
+    */
 
     // 去拿板子資訊
     auto devices = xcl::get_xil_devices();
@@ -130,7 +188,7 @@ int main(int argc, char **argv)
     int narg = 0;
     OCL_CHECK(err, err = risk_check.setArg(narg++, buffer_input));
     OCL_CHECK(err, err = risk_check.setArg(narg++, buffer_output));
-    OCL_CHECK(err, err = risk_check.setArg(narg++, 10));
+    OCL_CHECK (err, err = risk_check.setArg (narg++, 4096)); // 客戶人數
 
     // 把 input 資料丟到板子的記憶體
     OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_input}, 0 /* 0 means from host*/));
@@ -160,6 +218,6 @@ int main(int argc, char **argv)
         }
     }
 
-    // std::cout << "TEST " << (match ? "FAILED" : "PASSED") << std::endl;
+    std::cout << "測試結果 =" << match << std::endl;
     return match;
 }

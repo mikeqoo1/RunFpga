@@ -30,18 +30,26 @@ mem_rd:
 static void compare(hls::stream<int> &inStream, hls::stream<int> &outStream, int number_of_customer)
 {
 execute:
+    int all = 0;
+    int use = 0;
     for (int i = 0; i < number_of_customer; i++)
     {
 #pragma HLS LOOP_TRIPCOUNT min = customers_max max = customers_max
-        int temp = inStream.read();
-        // 假設使用額度超過 100 萬
-        if (temp > 100)
-        {
-            outStream << 999;
-        }
+        if (i % 2 == 0)
+            all = inStream.read();
         else
+            use = inStream.read();
+
+        if (use > 0)
         {
-            outStream << 0;
+            if (use > all)
+            {
+                outStream << 999;
+            }
+            else
+            {
+                outStream << 0;
+            }
         }
     }
 }
