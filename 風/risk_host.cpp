@@ -18,7 +18,7 @@ int main(int argc, char **argv)
     // 商業邏輯
     std::vector<int, aligned_allocator<int>> customer_data(DATA_SIZE);
     std::vector<int, aligned_allocator<int>> customer_ans(DATA_SIZE);
-    std::vector<int, aligned_allocator<int>> customer_ans_sw({0, 0, 0, 999, 999, 0, 999, 999, 0, 0});
+    std::vector<int, aligned_allocator<int>> customer_ans_sw({111, 0, 0, 0, 999, 999, 0, 999, 999, 0, 0});
 
     // 拿大戶資料
     std::string filePath = "大戶資料.txt";

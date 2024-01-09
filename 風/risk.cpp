@@ -32,14 +32,16 @@ static void compare(hls::stream<int> &inStream, hls::stream<int> &outStream, int
 execute:
     int all = 0;
     int use = 0;
+    int count = 0;
     for (int i = 0; i < number_of_customer; i++)
     {
 #pragma HLS LOOP_TRIPCOUNT min = customers_max max = customers_max
-        if (i % 2 == 0)
+        if (count % 2 == 0)
             all = inStream.read();
         else
             use = inStream.read();
 
+        count = count + 1;
         if (use > 0)
         {
             if (use > all)
@@ -50,6 +52,8 @@ execute:
             {
                 outStream << 0;
             }
+        } else {
+            outStream << 111;
         }
     }
 }
