@@ -20,5 +20,21 @@ int main()
         std::cout << "f22 = " << f22.read() << std::endl;
     }
 
+/*
+    int data[9] = {2330, 8000, 666, 6016, 470000, 333, 1102, 10000, 99};
+    int f15[3] = {0, 0, 0};
+    int f16[3] = {0, 0, 0};
+    int f22[3] = {0, 0, 0};
+
+    riskcontrol(data, f15, f16, f22);
+
+    for (int i = 0; i < 3; i++)
+    {
+        std::cout << "i=" << i << std::endl;
+        std::cout << "f15 = " << f15[i] << std::endl;
+        std::cout << "f16 = " << f16[i] << std::endl;
+        std::cout << "f22 = " << f22[i] << std::endl;
+    }
+*/
     return 0;
 }
