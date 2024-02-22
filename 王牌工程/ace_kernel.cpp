@@ -1,18 +1,20 @@
 #include "ace_kernel.h"
 
 /* TASK 版本  */
-int tempqty = 0;
+const int UNIT_QTY = 1000; // 數量的單位
+const int UNIT_PRICE = 3;  // 價格的單位
 void dataassign(hls::stream<int> &in,
                 hls::stream<int> &stock, hls::stream<int> &qty, hls::stream<int> &price)
 {
+    static int tempqty = 0;
     int data = in.read();
     //std::cout << "資料是" << data << std::endl;
-    if (data % 1000 == 0) // 數量都要以 1000 為單位
+    if (data % UNIT_QTY == 0) // 數量都要以 1000 為單位
     {
         tempqty = data;
         qty.write(data);
     }
-    else if (data % 3 == 0) // 價錢都是以 3 為單位
+    else if (data % UNIT_PRICE == 0) // 價錢都是以 3 為單位
     {
         int money = tempqty * data;
         //std::cout << "價金是" << money << std::endl;
