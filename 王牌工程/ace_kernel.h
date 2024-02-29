@@ -1,30 +1,35 @@
 #include "hls_task.h"
 #include <iostream>
-#define N 10
+#include <stdio.h>
+#include <ap_int.h>
+#include <hls_stream.h>
 
-/*
-F15 庫存不足
-F16 停止融券 or 沒有配券
-F22 額度不夠
-*/
+using namespace std;
+#define num_users 100
+#define price_limit 5000000
+#define qty_limit 999
+#define stock_len 14
+#define qty_len 14
+#define price_len 20
+#define user_len stock_len + qty_len + price_len
+
+typedef ap_uint<user_len> user_t;
+typedef ap_uint<stock_len> stock_t;
+typedef ap_uint<qty_len> qty_t;
+typedef ap_uint<price_len> price_t;
+typedef ap_uint<2> result_t;
+
+struct user_obj
+{
+    int stock;
+    int price;
+    int qty;
+};
 
 // Top function
-void riskcontrol(hls::stream<int> &inputdata,
-                 hls::stream<int> &F15, hls::stream<int> &F16, hls::stream<int> &F22);
+void riskcontrol(hls::stream<user_t> &inputdata, hls::stream<result_t> &stock_out, hls::stream<result_t> &qty_out, hls::stream<result_t> &price_out);
 // Sub function
-void dataassign(hls::stream<int> &in,
-                hls::stream<int> &stock, hls::stream<int> &qty, hls::stream<int> &price);
-void checkF15(hls::stream<int> &qty, hls::stream<int> &f15out);
-void checkF16(hls::stream<int> &stock, hls::stream<int> &f16out);
-void checkF22(hls::stream<int> &price, hls::stream<int> &f22out);
-
-/*
-// DATAFLOW 版本
-void riskcontrol(int In[N], int F15Out[N], int F16Out[N], int F22Out[N]);
-
-// Sub functions
-void dataassign(int In[N], int stock[N], int qty[N], int price[N]);
-void checkF15(int qty[N], int f15out[N]);
-void checkF16(int stock[N], int f15out[N]);
-void checkF22(int price[N], int f22out[N]);
-*/
+void dataassign(hls::stream<user_t> &in, hls::stream<stock_t> &stock, hls::stream<qty_t> &qty, hls::stream<price_t> &price);
+void checkStock(hls::stream<stock_t> &stock, hls::stream<result_t> &Stockout);
+void checkQty(hls::stream<qty_t> &qty, hls::stream<result_t> &Qtyout);
+void checkPrice(hls::stream<price_t> &price, hls::stream<result_t> &Priceout);
