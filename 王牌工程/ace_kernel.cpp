@@ -14,69 +14,78 @@ void riskcontrol(hls::stream<user_t> &inputdata, hls::stream<result_t> &stock_ou
 
 void dataassign(hls::stream<user_t> &in, hls::stream<stock_t> &stock, hls::stream<qty_t> &qty, hls::stream<price_t> &price)
 {
-    ap_uint<20> money;
-    user_t user = in.read();
-    printf("資料: [%d] \n", user);
+    // ap_uint<20> money;
 
-    qty_t tempqty = user(qty_len - 1, 0);
-    printf("qty: [%d] \n", qty);
-    user = user >> qty_len;
+    for (int i = 0; i < num_users; i++)
+    {
+        user_t user = in.read();
+        // printf("資料: [%d] \n", user);
 
-    price_t tempprice = user(price_len - 1, 0);
-    printf("price: [%d] \n", price);
-    user = user >> price_len;
+        stock_t tempstock = user(stock_len + qty_len + price_len - 1, qty_len + price_len);
+        // printf("stock: [%d] \n", tempstock);
 
-    stock_t tempstock = user(stock_len - 1, 0);
-    printf("stock: [%d] \n", stock);
-    user = user >> stock_len;
+        price_t tempprice = user(qty_len + price_len - 1, price_len);
+        // printf("price: [%d] \n", tempprice);
 
-    money = tempqty * tempprice;
-    printf("money: [%d] \n", money);
-    qty.write(tempqty);
-    price.write(money);
-    stock.write(tempstock);
+        qty_t tempqty = user(qty_len - 1, 0);
+        // printf("qty: [%d] \n", tempqty);
+
+        // money = tempqty * tempprice;
+        // printf("money: [%d] \n", money);
+
+        qty.write(tempqty);
+        price.write(tempprice);
+        stock.write(tempstock);
+    }
 }
 
 void checkStock(hls::stream<stock_t> &stock, hls::stream<result_t> &check_stock_out)
 {
+    for (int i = 0; i < num_users; i++)
+    {
+        stock_t s = stock.read();
 
-    stock_t s = stock.read();
-
-    result_t result;
-    result = 0;
-    //printf("stock: %d, 結果: %d \n", s, result);
-    check_stock_out.write(result);
+        result_t result;
+        result = 0;
+        // printf("stock: %d, 結果: %d \n", s, result);
+        check_stock_out.write(result);
+    }
 }
 
 void checkQty(hls::stream<qty_t> &qty, hls::stream<result_t> &check_qty_out)
 {
-    qty_t q = qty.read();
-    result_t result;
-    if (q > qty_limit)
+    for (int i = 0; i < num_users; i++)
     {
-        result = 1;
+        qty_t q = qty.read();
+        result_t result;
+        if (q > qty_limit)
+        {
+            result = 1;
+        }
+        else
+        {
+            result = 0;
+        }
+        // printf("qty: %d, 結果: %d \n", q, result);
+        check_qty_out.write(result);
     }
-    else
-    {
-        result = 0;
-    }
-    //printf("qty: %d, 結果: %d \n", q, result);
-    check_qty_out.write(result);
 }
 
 void checkPrice(hls::stream<price_t> &price, hls::stream<result_t> &check_price_out)
 {
-
-    price_t p = price.read();
-    result_t result;
-    if (p > price_limit)
+    for (int i = 0; i < num_users; i++)
     {
-        result = 1;
+        price_t p = price.read();
+        result_t result;
+        if (p > price_limit)
+        {
+            result = 1;
+        }
+        else
+        {
+            result = 0;
+        }
+        // printf("price: %d, 結果: %d \n", p, result);
+        check_price_out.write(result);
     }
-    else
-    {
-        result = 0;
-    }
-    //printf("price: %d, 結果: %d \n", p, result);
-    check_price_out.write(result);
 }

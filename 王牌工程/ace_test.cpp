@@ -5,26 +5,33 @@ int main()
     // 家銘版本
     user_obj all_user[num_users];
     hls::stream<user_t> all_user_s;
-    printf("%d,\n", 8 << 1);
     for (int i = 0; i < num_users; i++)
     {
         user_t user;
         user_obj user_sw;
         int stock = rand() % 16384;
+        // cout << "stock=" << stock << endl;
         user_sw.stock = stock;
-        user(stock_len - 1, 0) = (stock_t)stock;
-        user = user << price_len;
+        // 把 stock 存入 user
+        user(user_len - 1, qty_len + price_len) = stock;
 
         int price = rand() % 9999;
+        // cout << "price=" << price << endl;
         user_sw.price = price;
-        user(price_len - 1, 0) = (price_t)price;
-        user = user << qty_len;
+        // 把 price 存入 user
+        user(qty_len + price_len - 1, price_len) = price;
 
         int qty = rand() % 16384;
+        // cout << "qty=" << qty << endl;
         user_sw.qty = qty;
-        user(qty_len - 1, 0) = (qty_t)qty;
+        // 把 qty 存入 user
+        user(price_len - 1, 0) = qty;
+        // 從 user 中拿出 stock price 和 qty
+        int tempstock = user(stock_len + qty_len + price_len - 1, qty_len + price_len);
+        int tempprice = user(qty_len + price_len - 1, price_len);
+        int tempqty = user(qty_len - 1, 0);
 
-        printf("i = %d; stock: %d; price:%d, qty:%d\n", i, (int)user(price_len - 1, qty_len), (int)user(price_len - 1, qty_len), (int)user(qty_len - 1, 0));
+        // printf("i = %d; stock: %d; price:%d, qty:%d\n", i, tempstock, tempprice, tempqty);
         all_user[i] = user_sw;
         all_user_s.write(user);
     }
@@ -36,7 +43,7 @@ int main()
     {
         result_t result;
         user_obj user_sw = all_user[i];
-        printf("i = %d; stock: %d; price:%d, qty:%d\n", i, user_sw.stock, user_sw.qty, user_sw.price);
+        // printf("i = %d; stock: %d; price:%d, qty:%d\n", i, user_sw.stock, user_sw.qty, user_sw.price);
         result = 0;
         stock_sw.write(result);
         if (user_sw.qty > qty_limit)
@@ -50,7 +57,7 @@ int main()
             qty_sw.write(result);
         }
 
-        if (user_sw.price * user_sw.qty > price_limit)
+        if (user_sw.price > price_limit)
         {
             result = 1;
             price_sw.write(result);
