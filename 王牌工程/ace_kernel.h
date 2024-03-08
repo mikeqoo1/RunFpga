@@ -18,7 +18,7 @@ typedef ap_uint<stock_len> stock_t;
 typedef ap_uint<qty_len> qty_t;
 typedef ap_uint<price_len> price_t;
 typedef ap_uint<2> result_t;
-
+typedef ap_uint<2> result_t;
 struct user_obj
 {
     int stock;
