@@ -10,7 +10,7 @@
 #include <mysql.h>
 
 // FPGA 相關
-// #include "xcl2.hpp"
+#include "xcl2.hpp"
 // #include <xrt/xrt_device.h>
 // #include <experimental/xrt_xclbin.h>
 // #include <xrt/xrt_bo.h>
@@ -18,40 +18,6 @@
 // #include <experimental/xrt_ip.h>
 
 using namespace std;
-
-template <typename T>
-class aligned_allocator
-{
-public:
-    using value_type = T;
-    using pointer = T *;
-    using const_pointer = const T *;
-    using reference = T &;
-    using const_reference = const T &;
-    using size_type = std::size_t;
-    using difference_type = std::ptrdiff_t;
-
-    aligned_allocator() noexcept = default;
-    ~aligned_allocator() noexcept = default;
-
-    template <typename U>
-    struct rebind
-    {
-        using other = aligned_allocator<U>;
-    };
-
-    pointer allocate(size_type n)
-    {
-        if (auto p = static_cast<pointer>(aligned_alloc(alignof(T), n * sizeof(T))))
-            return p;
-        throw std::bad_alloc();
-    }
-
-    void deallocate(pointer p, size_type) noexcept
-    {
-        std::free(p);
-    }
-};
 
 MYSQL *conndb;
 struct Account
