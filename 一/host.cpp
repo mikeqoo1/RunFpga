@@ -11,13 +11,15 @@
 
 // FPGA 相關
 #include "xcl2.hpp"
-// #include <xrt/xrt_device.h>
-// #include <experimental/xrt_xclbin.h>
-// #include <xrt/xrt_bo.h>
-// #include <xrt/xrt_kernel.h>
-// #include <experimental/xrt_ip.h>
+#include <xrt/xrt_device.h>
+#include <experimental/xrt_xclbin.h>
+#include <xrt/xrt_bo.h>
+#include <xrt/xrt_kernel.h>
+#include <experimental/xrt_ip.h>
 
 using namespace std;
+
+#define DATA_SIZE 256
 
 MYSQL *conndb;
 struct Account
@@ -112,19 +114,19 @@ int QueryStock(map<string, Stock> *stockmap)
     return 0;
 }
 
-int SearchAmt(std::vector<int, aligned_allocator<int>> source_a, int account)
+int SearchAmt(std::vector<int, aligned_allocator<int>> account_vector, int account)
 {
     int account_to_find = account;
-    auto it = std::find(source_a.begin(), source_a.end(), account_to_find);
-    if (it != source_a.end())
+    auto it = std::find(account_vector.begin(), account_vector.end(), account_to_find);
+    if (it != account_vector.end())
     {
         // 帳號的index 一定是偶數
-        int index = std::distance(source_a.begin(), it);
+        int index = std::distance(account_vector.begin(), it);
         if (index % 2 == 0)
         {
-            if (index + 1 < source_a.size())
+            if (index + 1 < account_vector.size())
             {
-                int amt = source_a[index + 1]; // 找帳號對應的度
+                int amt = account_vector[index + 1]; // 找帳號對應的度
                 std::cout << "帳號 " << account_to_find << " 的額度是：" << amt << std::endl;
                 return amt;
             }
@@ -187,24 +189,28 @@ int main()
     // Convert map to vector
     std::vector<std::pair<int, Account>> vec(accmap.begin(), accmap.end());
 
-    // Extract 'amt' from each Account object and store in vector
-    std::vector<int, aligned_allocator<int>> source_a;
-    source_a.reserve(vec.size() * 2); // Reserve space for both 'amt' and 'account_no'
+    size_t size_in_bytes = sizeof(int) * DATA_SIZE;
+    std::vector<int, aligned_allocator<int>> account_vector(LENGTH); // Account
+    std::vector<int, aligned_allocator<int>> stock_vector(LENGTH);
+    std::vector<int, aligned_allocator<int>> result_sw(LENGTH);
+    std::vector<int, aligned_allocator<int>> result_hw(LENGTH);
+
+    // account_vector.reserve(vec.size() * 2); // Reserve space for both 'amt' and 'account_no'
 
     for (const auto &pair : vec)
     {
-        source_a.push_back(pair.second.account_no); // 先加帳號
-        source_a.push_back(pair.second.amt);        // 再加額度
+        account_vector.push_back(pair.second.account_no); // 先加帳號
+        account_vector.push_back(pair.second.amt);        // 再加額度
     }
 
     std::cout << "帳號跟額度:" << std::endl;
-    for (size_t i = 0; i < source_a.size(); ++i)
+    for (size_t i = 0; i < account_vector.size(); ++i)
     {
-        std::cout << std::setw(5) << source_a[i] << " ";
+        std::cout << std::setw(5) << account_vector[i] << " ";
         if ((i + 1) % 10 == 0)
             std::cout << std::endl;
     }
     std::cout << std::endl;
 
-    SearchAmt(source_a, 666);
+    // SearchAmt(account_vector, 666);
 }
