@@ -3,17 +3,56 @@
 #include <cstring>
 #include <sstream>
 #include <map>
+#include <vector>
+#include <algorithm>
+#include <numeric> // For std::transform_reduce
+#include <iomanip> // For std::setw
 #include <mysql.h>
 
 // FPGA 相關
-#include "xcl2.hpp"
-#include <xrt/xrt_device.h>
-#include <experimental/xrt_xclbin.h>
-#include <xrt/xrt_bo.h>
-#include <xrt/xrt_kernel.h>
-#include <experimental/xrt_ip.h>
+// #include "xcl2.hpp"
+// #include <xrt/xrt_device.h>
+// #include <experimental/xrt_xclbin.h>
+// #include <xrt/xrt_bo.h>
+// #include <xrt/xrt_kernel.h>
+// #include <experimental/xrt_ip.h>
 
 using namespace std;
+
+template <typename T>
+class aligned_allocator
+{
+public:
+    using value_type = T;
+    using pointer = T *;
+    using const_pointer = const T *;
+    using reference = T &;
+    using const_reference = const T &;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
+
+    aligned_allocator() noexcept = default;
+    ~aligned_allocator() noexcept = default;
+
+    template <typename U>
+    struct rebind
+    {
+        using other = aligned_allocator<U>;
+    };
+
+    pointer allocate(size_type n)
+    {
+        if (auto p = static_cast<pointer>(aligned_alloc(alignof(T), n * sizeof(T))))
+            return p;
+        throw std::bad_alloc();
+    }
+
+    void deallocate(pointer p, size_type) noexcept
+    {
+        std::free(p);
+    }
+};
+
 MYSQL *conndb;
 struct Account
 {
@@ -107,6 +146,35 @@ int QueryStock(map<string, Stock> *stockmap)
     return 0;
 }
 
+int SearchAmt(std::vector<int, aligned_allocator<int>> source_a, int account)
+{
+    int account_to_find = account;
+    auto it = std::find(source_a.begin(), source_a.end(), account_to_find);
+    if (it != source_a.end())
+    {
+        // 帳號的index 一定是偶數
+        int index = std::distance(source_a.begin(), it);
+        if (index % 2 == 0)
+        {
+            if (index + 1 < source_a.size())
+            {
+                int amt = source_a[index + 1]; // 找帳號對應的度
+                std::cout << "帳號 " << account_to_find << " 的額度是：" << amt << std::endl;
+                return amt;
+            }
+        }
+        else
+        {
+            std::cout << "未找到帳號 " << account_to_find << " 的額度" << std::endl;
+        }
+    }
+    else
+    {
+        std::cout << "無此帳號 " << account_to_find << std::endl;
+    }
+    return -1;
+}
+
 int main()
 {
     map<int, Account> accmap;
@@ -150,4 +218,27 @@ int main()
     //------以上從資料庫拿完資料------//
 
     // Vitis hls 不支援 C++ Map 所以這邊要做一點轉換我把 C++ Map 轉成 Vector
+    // Convert map to vector
+    std::vector<std::pair<int, Account>> vec(accmap.begin(), accmap.end());
+
+    // Extract 'amt' from each Account object and store in vector
+    std::vector<int, aligned_allocator<int>> source_a;
+    source_a.reserve(vec.size() * 2); // Reserve space for both 'amt' and 'account_no'
+
+    for (const auto &pair : vec)
+    {
+        source_a.push_back(pair.second.account_no); // 先加帳號
+        source_a.push_back(pair.second.amt);        // 再加額度
+    }
+
+    std::cout << "帳號跟額度:" << std::endl;
+    for (size_t i = 0; i < source_a.size(); ++i)
+    {
+        std::cout << std::setw(5) << source_a[i] << " ";
+        if ((i + 1) % 10 == 0)
+            std::cout << std::endl;
+    }
+    std::cout << std::endl;
+
+    SearchAmt(source_a, 666);
 }
