@@ -9,13 +9,12 @@
 #include <iomanip> // For std::setw
 #include <mysql.h>
 
+#include "cmdlineparser.h"
+
 // FPGA 相關
-#include "xcl2.hpp"
-#include <xrt/xrt_device.h>
-#include <experimental/xrt_xclbin.h>
-#include <xrt/xrt_bo.h>
-#include <xrt/xrt_kernel.h>
-#include <experimental/xrt_ip.h>
+#include "experimental/xrt_bo.h"
+#include "experimental/xrt_device.h"
+#include "experimental/xrt_kernel.h"
 
 using namespace std;
 
@@ -114,7 +113,7 @@ int QueryStock(map<string, Stock> *stockmap)
     return 0;
 }
 
-int SearchAmt(std::vector<int, aligned_allocator<int>> account_vector, int account)
+int SearchAmt(std::vector<int> account_vector, int account)
 {
     int account_to_find = account;
     auto it = std::find(account_vector.begin(), account_vector.end(), account_to_find);
@@ -124,7 +123,7 @@ int SearchAmt(std::vector<int, aligned_allocator<int>> account_vector, int accou
         int index = std::distance(account_vector.begin(), it);
         if (index % 2 == 0)
         {
-            if (index + 1 < account_vector.size())
+            if (index + 1 < int(account_vector.size()))
             {
                 int amt = account_vector[index + 1]; // 找帳號對應的度
                 std::cout << "帳號 " << account_to_find << " 的額度是：" << amt << std::endl;
@@ -143,7 +142,7 @@ int SearchAmt(std::vector<int, aligned_allocator<int>> account_vector, int accou
     return -1;
 }
 
-int main()
+int main(int argc, char **argv)
 {
     map<int, Account> accmap;
     map<string, Stock> stockmap;
@@ -188,14 +187,7 @@ int main()
     // Vitis hls 不支援 C++ Map 所以這邊要做一點轉換我把 C++ Map 轉成 Vector
     // Convert map to vector
     std::vector<std::pair<int, Account>> vec(accmap.begin(), accmap.end());
-
-    size_t size_in_bytes = sizeof(int) * DATA_SIZE;
-    std::vector<int, aligned_allocator<int>> account_vector(LENGTH); // Account
-    std::vector<int, aligned_allocator<int>> stock_vector(LENGTH);
-    std::vector<int, aligned_allocator<int>> result_sw(LENGTH);
-    std::vector<int, aligned_allocator<int>> result_hw(LENGTH);
-
-    // account_vector.reserve(vec.size() * 2); // Reserve space for both 'amt' and 'account_no'
+    std::vector<int> account_vector;
 
     for (const auto &pair : vec)
     {
@@ -203,14 +195,105 @@ int main()
         account_vector.push_back(pair.second.amt);        // 再加額度
     }
 
+    std::vector<std::pair<int, Stock>> vec2(stockmap.begin(), stockmap.end());
+    std::vector<int> stock_vector;
+    for (const auto &pair2 : vec2)
+    {
+        stock_vector.push_back(pair2.second.account_no);
+        int aaa = atoi(pair2.second.stockno);
+        stock_vector.push_back(aaa);
+        stock_vector.push_back(pair2.second.qty);
+    }
+
+    std::vector<int> result_sw;
+    std::vector<int> result_hw;
+
     std::cout << "帳號跟額度:" << std::endl;
     for (size_t i = 0; i < account_vector.size(); ++i)
     {
-        std::cout << std::setw(5) << account_vector[i] << " ";
-        if ((i + 1) % 10 == 0)
-            std::cout << std::endl;
+        std::cout << account_vector[i] << std::endl;
+        // if ((i + 1) % 10 == 0)
+        //     std::cout << std::endl;
     }
-    std::cout << std::endl;
+    SearchAmt(account_vector, 666);
 
-    // SearchAmt(account_vector, 666);
+    std::cout << "庫存:" << std::endl;
+    for (size_t i = 0; i < stock_vector.size(); ++i)
+    {
+        std::cout << stock_vector[i] << std::endl;
+        // if ((i + 1) % 10 == 0)
+        //     std::cout << std::endl;
+    }
+
+    // Command Line Parser
+    sda::utils::CmdLineParser parser;
+
+    // Switches
+    //**************//"<Full Arg>",  "<Short Arg>", "<Description>", "<Default>"
+    parser.addSwitch("--xclbin_file", "-x", "input binary file string", "");
+    parser.addSwitch("--device_id", "-d", "device index", "0");
+    parser.parse(argc, argv);
+
+    // Read settings
+    std::string binaryFile = parser.value("xclbin_file");
+    int device_index = stoi(parser.value("device_id"));
+
+    if (argc < 3)
+    {
+        parser.printHelp();
+        return EXIT_FAILURE;
+    }
+
+    std::cout << "Open the device" << device_index << std::endl;
+    auto device = xrt::device(device_index);
+    std::cout << "Load the xclbin " << binaryFile << std::endl;
+    auto uuid = device.load_xclbin(binaryFile);
+
+    size_t vector_size_bytes = sizeof(int) * DATA_SIZE;
+
+    auto krnl = xrt::kernel(device, uuid, "vadd");
+
+    std::cout << "Allocate Buffer in Global Memory\n";
+    auto acount = xrt::bo(device, vector_size_bytes, krnl.group_id(0));
+    auto stock = xrt::bo(device, vector_size_bytes, krnl.group_id(1));
+    auto result = xrt::bo(device, vector_size_bytes, krnl.group_id(2));
+
+    // Map the contents of the buffer object into host memory
+    acount.write(account_vector);
+    stock.write(stock_vector);
+    result.write(result_hw);
+    // 初始化
+    //  std::fill(bo0_map, bo0_map + DATA_SIZE, 0);
+    //  std::fill(bo1_map, bo1_map + DATA_SIZE, 0);
+    //  std::fill(bo_out_map, bo_out_map + DATA_SIZE, 0);
+
+    // Create the test data
+    // int bufReference[DATA_SIZE];
+    // for (int i = 0; i < DATA_SIZE; ++i)
+    // {
+    //     acount_vector[i] = i;
+    //     stock_vector[i] = i;
+    //     bufReference[i] = bo0_map[i] + bo1_map[i];
+    // }
+
+    // Synchronize buffer content with device side
+    std::cout << "synchronize input buffer data to device global memory\n";
+
+    acount.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+    stock.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+
+    std::cout << "Execution of the kernel\n";
+    auto run = krnl(acount, stock, result, DATA_SIZE);
+    run.wait();
+
+    // Get the output;
+    std::cout << "Get the output data from the device" << std::endl;
+    result.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
+
+    // Validate our results
+    if (std::memcmp(result_sw, result_hw, DATA_SIZE))
+        throw std::runtime_error("Value read back does not match reference");
+
+    std::cout << "TEST PASSED\n";
+    return 0;
 }
