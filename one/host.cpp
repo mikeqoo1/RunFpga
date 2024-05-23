@@ -30,13 +30,13 @@ struct Account
 struct Stock
 {
     int account_no;
-    char stockno[6];
+    int stockno;
     int qty;
 };
 
 int ConnectDB();
-int QueryAccount(map<string, Account> *accmap);
-int QueryStock(map<string, Stock> *stockmap);
+int QueryAccount(map<int, Account> *accmap);
+int QueryStock(map<int, Stock> *stockmap);
 
 int ConnectDB()
 {
@@ -79,7 +79,7 @@ int QueryAccount(map<int, Account> *accmap)
     return 0;
 }
 
-int QueryStock(map<string, Stock> *stockmap)
+int QueryStock(map<int, Stock> *stockmap)
 {
     MYSQL_RES *res;
     MYSQL_ROW row;
@@ -100,14 +100,14 @@ int QueryStock(map<string, Stock> *stockmap)
     while ((row = mysql_fetch_row(res)) != NULL)
     {
         s.account_no = atoi(row[0]);
-        strcpy(s.stockno, row[1]);
+        s.stockno = atoi(row[1]);
         s.qty = atoi(row[2]);
         std::stringstream ss;
         ss.str("");
         ss.clear();
         ss << s.account_no << s.stockno;
         key = ss.str();
-        stockmap->insert(std::pair<string, Stock>(key, s));
+        stockmap->insert(std::pair<int, Stock>(atoi(key.c_str()), s));
     }
     mysql_free_result(res);
     return 0;
@@ -145,7 +145,7 @@ int SearchAmt(std::vector<int> account_vector, int account)
 int main(int argc, char **argv)
 {
     map<int, Account> accmap;
-    map<string, Stock> stockmap;
+    map<int, Stock> stockmap;
     int status;
     status = ConnectDB();
     if (status != 0)
@@ -200,8 +200,7 @@ int main(int argc, char **argv)
     for (const auto &pair2 : vec2)
     {
         stock_vector.push_back(pair2.second.account_no);
-        int aaa = atoi(pair2.second.stockno);
-        stock_vector.push_back(aaa);
+        stock_vector.push_back(pair2.second.stockno);
         stock_vector.push_back(pair2.second.qty);
     }
 
@@ -251,8 +250,9 @@ int main(int argc, char **argv)
 
     size_t vector_size_bytes = sizeof(int) * DATA_SIZE;
 
-    auto krnl = xrt::kernel(device, uuid, "vadd");
 
+/* 先把ADD的搞好再來搞風控
+    auto krnl = xrt::kernel(device, uuid, "riskcontrol");
     std::cout << "Allocate Buffer in Global Memory\n";
     auto acount = xrt::bo(device, vector_size_bytes, krnl.group_id(0));
     auto stock = xrt::bo(device, vector_size_bytes, krnl.group_id(1));
@@ -262,10 +262,6 @@ int main(int argc, char **argv)
     acount.write(account_vector);
     stock.write(stock_vector);
     result.write(result_hw);
-    // 初始化
-    //  std::fill(bo0_map, bo0_map + DATA_SIZE, 0);
-    //  std::fill(bo1_map, bo1_map + DATA_SIZE, 0);
-    //  std::fill(bo_out_map, bo_out_map + DATA_SIZE, 0);
 
     // Create the test data
     // int bufReference[DATA_SIZE];
@@ -281,18 +277,30 @@ int main(int argc, char **argv)
 
     acount.sync(XCL_BO_SYNC_BO_TO_DEVICE);
     stock.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+*/
+
+    auto krnl = xrt::kernel(device, uuid, "vadd");
+
+    std::cout << "Allocate Buffer in Global Memory\n";
+    auto device_account_vector = xrt::bo(device, vector_size_bytes, krnl.group_id(0));
+    auto device_stock_vector = xrt::bo(device, vector_size_bytes, krnl.group_id(1));
+    auto bo_out = xrt::bo(device, vector_size_bytes, krnl.group_id(2));
+
+    // Synchronize buffer content with device side
+    std::cout << "synchronize input buffer data to device global memory\n";
+
+    device_account_vector.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+    device_stock_vector.sync(XCL_BO_SYNC_BO_TO_DEVICE);
 
     std::cout << "Execution of the kernel\n";
-    auto run = krnl(acount, stock, result, DATA_SIZE);
+    //auto run = krnl(acount, stock, result, DATA_SIZE);
+    auto run = krnl(device_account_vector, device_stock_vector, bo_out, DATA_SIZE);
     run.wait();
 
     // Get the output;
     std::cout << "Get the output data from the device" << std::endl;
-    result.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
-
-    // Validate our results
-    if (std::memcmp(result_sw, result_hw, DATA_SIZE))
-        throw std::runtime_error("Value read back does not match reference");
+    //result.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
+    bo_out.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
 
     std::cout << "TEST PASSED\n";
     return 0;

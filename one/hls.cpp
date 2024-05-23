@@ -1,4 +1,4 @@
-#include "risk.h"
+#include "hls.h"
 
 void riskcontrol(hls::stream<user_t> &inputdata, hls::stream<result_t> &stock_out, hls::stream<result_t> &qty_out, hls::stream<result_t> &price_out)
 {
