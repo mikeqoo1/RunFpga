@@ -279,12 +279,22 @@ int main(int argc, char **argv)
     stock.sync(XCL_BO_SYNC_BO_TO_DEVICE);
 */
 
-    auto krnl = xrt::kernel(device, uuid, "vadd");
+    auto krnl = xrt::kernel(device, uuid, "krnl_vadd");
 
     std::cout << "Allocate Buffer in Global Memory\n";
     auto device_account_vector = xrt::bo(device, vector_size_bytes, krnl.group_id(0));
     auto device_stock_vector = xrt::bo(device, vector_size_bytes, krnl.group_id(1));
     auto bo_out = xrt::bo(device, vector_size_bytes, krnl.group_id(2));
+
+    // copy 需要研究一下
+    // device_account_vector.copy(account_vector);
+    // device_stock_vector.copy(stock_vector);
+
+    // Write 沒辦法把 vector 放進去 需要轉換成 array 的型態
+    int *a = &account_vector[0];
+    int *b = &stock_vector[0];
+    device_account_vector.write(a);
+    device_stock_vector.write(b);
 
     // Synchronize buffer content with device side
     std::cout << "synchronize input buffer data to device global memory\n";
