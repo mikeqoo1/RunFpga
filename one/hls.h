@@ -5,6 +5,7 @@
 #include <hls_stream.h>
 
 using namespace std;
+/*
 #define num_users 100
 #define price_limit 5000000
 #define qty_limit 999
@@ -33,3 +34,13 @@ void dataassign(hls::stream<user_t> &in, hls::stream<stock_t> &stock, hls::strea
 void checkStock(hls::stream<stock_t> &stock, hls::stream<result_t> &Stockout);
 void checkQty(hls::stream<qty_t> &qty, hls::stream<result_t> &Qtyout);
 void checkPrice(hls::stream<price_t> &price, hls::stream<result_t> &Priceout);
+*/
+
+
+// 基本版本 可以讀 可以寫出來
+
+void riskcontrol(int *account, int *stock, int *result, int vSize);
+void dataassign(int *data, hls::stream<int> &streamdata, int vSize);
+void checkAccount(hls::stream<int> &acc, hls::stream<int> &result);
+void checkStock(hls::stream<int> &stock, hls::stream<int> &result);
+void write_result(int *out, hls::stream<int> &result, int vSize);

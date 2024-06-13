@@ -1,5 +1,7 @@
 #include "hls.h"
 
+/*
+
 void riskcontrol(hls::stream<user_t> &inputdata, hls::stream<result_t> &stock_out, hls::stream<result_t> &qty_out, hls::stream<result_t> &price_out)
 {
     // 本地端的數據流 stockid 和 qty 和 price (也就是 task 的輸入輸出通道) 以及 task 本身都要聲明為 hls_thread_local, 保證 TopFunction 呼叫時是活的
@@ -88,4 +90,75 @@ void checkPrice(hls::stream<price_t> &price, hls::stream<result_t> &check_price_
         // printf("price: %d, 結果: %d \n", p, result);
         check_price_out.write(result);
     }
+}
+
+*/
+
+void riskcontrol(int *account, int *stock, int *result, int vSize)
+{
+    static hls::stream<int> AccStream("account_stream");
+    static hls::stream<int> StocknStream("stock_stream");
+    static hls::stream<int> outStream("output_stream");
+#pragma HLS INTERFACE m_axi port = in1 bundle = gmem0 depth = 8
+#pragma HLS INTERFACE m_axi port = in2 bundle = gmem1 depth = 8
+#pragma HLS INTERFACE m_axi port = out bundle = gmem0 depth = 8
+
+#pragma HLS dataflow
+    dataassign(account, AccStream, vSize);
+    dataassign(stock, StocknStream, vSize);
+    checkAccount(account, AccStream, vSize);
+    checkStock(stock, StocknStream, vSize);
+    write_result(out, outStream, vSize);
+}
+
+void dataassign(int *data, hls::stream<int> &streamdata, int vSize)
+{
+    std::cout << "!!!Start read!!!" << std::endl;
+    for (int i = 0; i < vSize; i++)
+    {
+#pragma HLS LOOP_TRIPCOUNT min = size max = size
+        // Blocking write command to inStream
+        std::cout << "krnl read=" << data[i] << std::endl;
+        streamdata << data[i];
+    }
+    std::cout << "!!!End read!!!" << std::endl;
+}
+void checkAccount(hls::stream<int> &acc, hls::stream<int> &result)
+{
+    std::cout << "!!!Chaeck Account!!!" << std::endl;
+    for (int i = 0; i < vSize; i++)
+    {
+#pragma HLS LOOP_TRIPCOUNT min = size max = size
+        // Blocking write command to inStream
+        std::cout << "checkAccount read=" << data[i] << std::endl;
+        streamdata << data[i];
+    }
+    std::cout << "!!!End CheckAccount!!!" << std::endl;
+}
+
+void checkStock(hls::stream<int> &stock, hls::stream<int> &result)
+{
+    std::cout << "!!!Chaeck Stock!!!" << std::endl;
+    for (int i = 0; i < vSize; i++)
+    {
+#pragma HLS LOOP_TRIPCOUNT min = size max = size
+        int a = stock.read();
+
+        std::cout << "checkStock read=" << a << std::endl;
+        streamdata << data[i];
+    }
+    std::cout << "!!!End CheckStock!!!" << std::endl;
+}
+
+void write_result(int *out, hls::stream<int> &result, int vSize)
+{
+    std::cout << "!!!Start write!!!" << std::endl;
+    for (int i = 0; i < vSize; i++)
+    {
+#pragma HLS LOOP_TRIPCOUNT min = size max = size
+        // Blocking read command to inStream
+        out[i] = result.read();
+        // std::cout << "krnl write=" << out[i] << std::endl;
+    }
+    std::cout << "!!!End write!!!" << std::endl;
 }

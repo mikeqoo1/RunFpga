@@ -250,41 +250,13 @@ int main(int argc, char **argv)
 
     size_t vector_size_bytes = sizeof(int) * DATA_SIZE;
 
-
-/* 先把ADD的搞好再來搞風控
+    // auto krnl = xrt::kernel(device, uuid, "krnl_vadd");
     auto krnl = xrt::kernel(device, uuid, "riskcontrol");
-    std::cout << "Allocate Buffer in Global Memory\n";
-    auto acount = xrt::bo(device, vector_size_bytes, krnl.group_id(0));
-    auto stock = xrt::bo(device, vector_size_bytes, krnl.group_id(1));
-    auto result = xrt::bo(device, vector_size_bytes, krnl.group_id(2));
-
-    // Map the contents of the buffer object into host memory
-    acount.write(account_vector);
-    stock.write(stock_vector);
-    result.write(result_hw);
-
-    // Create the test data
-    // int bufReference[DATA_SIZE];
-    // for (int i = 0; i < DATA_SIZE; ++i)
-    // {
-    //     acount_vector[i] = i;
-    //     stock_vector[i] = i;
-    //     bufReference[i] = bo0_map[i] + bo1_map[i];
-    // }
-
-    // Synchronize buffer content with device side
-    std::cout << "synchronize input buffer data to device global memory\n";
-
-    acount.sync(XCL_BO_SYNC_BO_TO_DEVICE);
-    stock.sync(XCL_BO_SYNC_BO_TO_DEVICE);
-*/
-
-    auto krnl = xrt::kernel(device, uuid, "krnl_vadd");
 
     std::cout << "Allocate Buffer in Global Memory\n";
     auto device_account_vector = xrt::bo(device, vector_size_bytes, krnl.group_id(0));
     auto device_stock_vector = xrt::bo(device, vector_size_bytes, krnl.group_id(1));
-    auto bo_out = xrt::bo(device, vector_size_bytes, krnl.group_id(2));
+    auto result = xrt::bo(device, vector_size_bytes, krnl.group_id(2));
 
     // copy 需要研究一下
     // device_account_vector.copy(account_vector);
@@ -303,14 +275,12 @@ int main(int argc, char **argv)
     device_stock_vector.sync(XCL_BO_SYNC_BO_TO_DEVICE);
 
     std::cout << "Execution of the kernel\n";
-    //auto run = krnl(acount, stock, result, DATA_SIZE);
-    auto run = krnl(device_account_vector, device_stock_vector, bo_out, DATA_SIZE);
+    auto run = krnl(device_account_vector, device_stock_vector, result, DATA_SIZE);
     run.wait();
 
     // Get the output;
     std::cout << "Get the output data from the device" << std::endl;
-    //result.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
-    bo_out.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
+    result.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
 
     std::cout << "TEST PASSED\n";
     return 0;
