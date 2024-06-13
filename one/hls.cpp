@@ -106,9 +106,9 @@ void riskcontrol(int *account, int *stock, int *result, int vSize)
 #pragma HLS dataflow
     dataassign(account, AccStream, vSize);
     dataassign(stock, StocknStream, vSize);
-    checkAccount(account, AccStream, vSize);
-    checkStock(stock, StocknStream, vSize);
-    write_result(out, outStream, vSize);
+    checkAccount(AccStream, outStream, vSize);
+    checkStock(StocknStream, outStream, vSize);
+    write_result(result, outStream, vSize);
 }
 
 void dataassign(int *data, hls::stream<int> &streamdata, int vSize)
@@ -123,31 +123,20 @@ void dataassign(int *data, hls::stream<int> &streamdata, int vSize)
     }
     std::cout << "!!!End read!!!" << std::endl;
 }
-void checkAccount(hls::stream<int> &acc, hls::stream<int> &result)
+
+void checkALL(hls::stream<int> &acc, hls::stream<int> &stock, hls::stream<int> &result, int vSize)
 {
-    std::cout << "!!!Chaeck Account!!!" << std::endl;
+    std::cout << "!!!Chaeck ALL!!!" << std::endl;
     for (int i = 0; i < vSize; i++)
     {
 #pragma HLS LOOP_TRIPCOUNT min = size max = size
-        // Blocking write command to inStream
-        std::cout << "checkAccount read=" << data[i] << std::endl;
-        streamdata << data[i];
+        int a = acc.read();
+        int b = stock.read();
+        std::cout << "checkAccount read=" << a << std::endl;
+        std::cout << "checkStock read=" << b << std::endl;
+        result << a;
     }
-    std::cout << "!!!End CheckAccount!!!" << std::endl;
-}
-
-void checkStock(hls::stream<int> &stock, hls::stream<int> &result)
-{
-    std::cout << "!!!Chaeck Stock!!!" << std::endl;
-    for (int i = 0; i < vSize; i++)
-    {
-#pragma HLS LOOP_TRIPCOUNT min = size max = size
-        int a = stock.read();
-
-        std::cout << "checkStock read=" << a << std::endl;
-        streamdata << data[i];
-    }
-    std::cout << "!!!End CheckStock!!!" << std::endl;
+    std::cout << "!!!End Check ALL!!!" << std::endl;
 }
 
 void write_result(int *out, hls::stream<int> &result, int vSize)

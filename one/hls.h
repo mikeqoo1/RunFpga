@@ -41,6 +41,5 @@ void checkPrice(hls::stream<price_t> &price, hls::stream<result_t> &Priceout);
 
 void riskcontrol(int *account, int *stock, int *result, int vSize);
 void dataassign(int *data, hls::stream<int> &streamdata, int vSize);
-void checkAccount(hls::stream<int> &acc, hls::stream<int> &result);
-void checkStock(hls::stream<int> &stock, hls::stream<int> &result);
+void checkALL(hls::stream<int> &acc, hls::stream<int> &stock, hls::stream<int> &result, int vSize);
 void write_result(int *out, hls::stream<int> &result, int vSize);
