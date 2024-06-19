@@ -268,6 +268,9 @@ int main(int argc, char **argv)
     device_account_vector.write(a);
     device_stock_vector.write(b);
 
+    // 把硬體結果接回來本地
+    auto result_device = result.map<int *>();
+
     // Synchronize buffer content with device side
     std::cout << "synchronize input buffer data to device global memory\n";
 
@@ -281,6 +284,11 @@ int main(int argc, char **argv)
     // Get the output;
     std::cout << "Get the output data from the device" << std::endl;
     result.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
+
+    // memcmp 是用來判斷兩段記憶體區塊內容是否相同的函式
+    //if (std::memcmp(result_device, 預計的內容, DATA_SIZE))
+    //    throw std::runtime_error("Value read back does not match reference");
+    std::cout << "result_device=" << result_device << std::endl;
 
     std::cout << "TEST PASSED\n";
     return 0;

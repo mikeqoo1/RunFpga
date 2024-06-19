@@ -132,9 +132,19 @@ void checkALL(hls::stream<int> &acc, hls::stream<int> &stock, hls::stream<int> &
 #pragma HLS LOOP_TRIPCOUNT min = size max = size
         int a = acc.read();
         int b = stock.read();
-        std::cout << "checkAccount read=" << a << std::endl;
-        std::cout << "checkStock read=" << b << std::endl;
-        result << a;
+        if (vSize % 2 == 0)
+        {
+            std::cout << "額度=" << a << std::endl;
+        }
+        else
+        {
+            std::cout << "帳號=" << a << std::endl;
+        }
+        std::cout << "index=" << i << std::endl;
+        std::cout << "帳號=" << b << std::endl;
+        std::cout << "股票=" << b << std::endl;
+        std::cout << "庫存=" << b << std::endl;
+        result << 0;
     }
     std::cout << "!!!End Check ALL!!!" << std::endl;
 }
