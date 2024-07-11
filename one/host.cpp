@@ -285,10 +285,28 @@ int main(int argc, char **argv)
     std::cout << "Get the output data from the device" << std::endl;
     result.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
 
+    int bufReference[DATA_SIZE];
+    for (int i = 0; i < DATA_SIZE; ++i)
+    {
+        bufReference[i] = 0;
+    }
+
     // memcmp 是用來判斷兩段記憶體區塊內容是否相同的函式
-    //if (std::memcmp(result_device, 預計的內容, DATA_SIZE))
-    //    throw std::runtime_error("Value read back does not match reference");
-    std::cout << "result_device=" << result_device << std::endl;
+    int ret = std::memcmp(result_device, bufReference, DATA_SIZE);
+    if (ret > 0)
+    {
+        std::cout << "result_device is greater than bufReference" << std::endl;
+    }
+    else if (ret < 0)
+    {
+        std::cout << "result_device is less than bufReference" << std::endl;
+    }
+    else
+    {
+        std::cout << "結果一樣?" << std::endl;
+    }
+    std::cout << "bufReference=" << &bufReference << std::endl;
+    std::cout << "result_device=" << &result_device << std::endl;
 
     std::cout << "TEST PASSED\n";
     return 0;
