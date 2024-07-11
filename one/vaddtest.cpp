@@ -24,10 +24,24 @@ int main()
     uint32_t out[size], res[size];
     for (int i = 0; i < size; ++i)
     {
-        in1[i] = i;
+        if (i % 2 == 0)
+        {
+            in1[i] = i;
+        }
+        else
+        {
+            in1[i] = i * 1000;
+        }
         in2[i] = i;
+        if (in1[i] > in2[i])
+        {
+            res[i] = 0;
+        }
+        else
+        {
+            res[i] = 1;
+        }
         out[i] = 0;
-        res[i] = in1[i] + in2[i];
     }
 
     krnl_vadd(in1, in2, out, size);

@@ -288,7 +288,10 @@ int main(int argc, char **argv)
     int bufReference[DATA_SIZE];
     for (int i = 0; i < DATA_SIZE; ++i)
     {
-        bufReference[i] = 0;
+        if (account_vector[i] > stock_vector[i])
+            bufReference[i] = 0;
+        else
+            bufReference[i] = 1;
     }
 
     // memcmp 是用來判斷兩段記憶體區塊內容是否相同的函式
