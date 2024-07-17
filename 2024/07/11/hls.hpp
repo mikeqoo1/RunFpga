@@ -5,32 +5,34 @@
 #include <hls_stream.h>
 
 using namespace std;
-#define num_users 100
-#define price_limit 5000000
-#define qty_limit 999
+#define limit_amt 5000000
+#define num_users 128
 #define stock_len 14
-#define qty_len 14
 #define price_len 20
-#define user_len stock_len + qty_len + price_len
+#define qty_len 14
+#define bs_len 2
+#define order_len stock_len + price_len + qty_len + bs_len
+#define db_stock_len stock_len + qty_len
 
-typedef ap_uint<user_len> user_t;
+typedef ap_uint<order_len> order_t;
 typedef ap_uint<stock_len> stock_t;
-typedef ap_uint<qty_len> qty_t;
 typedef ap_uint<price_len> price_t;
+typedef ap_uint<qty_len> qty_t;
+typedef ap_uint<bs_len> bs_t;
 typedef ap_uint<2> result_t;
-struct user_obj
+typedef ap_uint<db_stock_len> db_stock_t;
+struct order_obj
 {
     int stock;
     int price;
     int qty;
+    int bs;
 };
-
 // Top function
-void riskcontrol(hls::stream<user_t> &inputdata, int *account, int *stock, hls::stream<result_t> &stock_out, hls::stream<result_t> &qty_out, hls::stream<result_t> &price_out);
+void topfunc(order_obj *orderlist);
 // Sub function
-void dataassign(hls::stream<user_t> &in, hls::stream<stock_t> &stock, hls::stream<qty_t> &qty, hls::stream<price_t> &price);
-void checkStock(hls::stream<stock_t> &stock, hls::stream<int> &DB_stock, hls::stream<result_t> &Stockout);
-void checkQty(hls::stream<qty_t> &qty, hls::stream<result_t> &Qtyout);
-void checkPrice(hls::stream<price_t> &price, hls::stream<qty_t> &qty, hls::stream<int> &DB_account, hls::stream<result_t> &Priceout);
-
-void dataassign2(int *data, hls::stream<int> &streamdata);
+void riskcontrol(hls::stream<order_t> &inputdata, hls::stream<db_stock_t> &db, hls::stream<result_t> &qty_out, hls::stream<result_t> &price_out);
+void dataassign(hls::stream<order_t> &in, hls::stream<stock_t> &stock, hls::stream<price_t> &price, hls::stream<qty_t> &qty, hls::stream<bs_t> &bs, hls::stream<int> &use_amt);
+void getinventory(hls::stream<db_stock_t> &db_stock_qty, hls::stream<stock_t> &db_stock, hls::stream<qty_t> &db_qty);
+void checkQty(hls::stream<qty_t> &qty, hls::stream<stock_t> &stock, hls::stream<stock_t> &db_stock, hls::stream<qty_t> &db_qty, hls::stream<result_t> &Qtyout, hls::stream<result_t> &Priceout);
+void checkPrice(hls::stream<price_t> &price, hls::stream<int> &use_amt, hls::stream<result_t> &Priceout, hls::stream<result_t> &Qtyout);

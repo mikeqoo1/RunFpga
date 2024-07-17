@@ -157,34 +157,34 @@ int QueryOrder(int64_t *list)
     return 0;
 }
 
-// int SearchAmt(std::vector<int> account_vector, int account)
-// {
-//     int account_to_find = account;
-//     auto it = std::find(account_vector.begin(), account_vector.end(), account_to_find);
-//     if (it != account_vector.end())
-//     {
-//         // 帳號的index 一定是偶數
-//         int index = std::distance(account_vector.begin(), it);
-//         if (index % 2 == 0)
-//         {
-//             if (index + 1 < int(account_vector.size()))
-//             {
-//                 int amt = account_vector[index + 1]; // 找帳號對應的度
-//                 std::cout << "帳號 " << account_to_find << " 的額度是：" << amt << std::endl;
-//                 return amt;
-//             }
-//         }
-//         else
-//         {
-//             std::cout << "未找到帳號 " << account_to_find << " 的額度" << std::endl;
-//         }
-//     }
-//     else
-//     {
-//         std::cout << "無此帳號 " << account_to_find << std::endl;
-//     }
-//     return -1;
-// }
+int SearchAmt(std::vector<int> account_vector, int account)
+{
+    int account_to_find = account;
+    auto it = std::find(account_vector.begin(), account_vector.end(), account_to_find);
+    if (it != account_vector.end())
+    {
+        // 帳號的index 一定是偶數
+        int index = std::distance(account_vector.begin(), it);
+        if (index % 2 == 0)
+        {
+            if (index + 1 < int(account_vector.size()))
+            {
+                int amt = account_vector[index + 1]; // 找帳號對應的度
+                std::cout << "帳號 " << account_to_find << " 的額度是：" << amt << std::endl;
+                return amt;
+            }
+        }
+        else
+        {
+            std::cout << "未找到帳號 " << account_to_find << " 的額度" << std::endl;
+        }
+    }
+    else
+    {
+        std::cout << "無此帳號 " << account_to_find << std::endl;
+    }
+    return -1;
+}
 
 int main(int argc, char **argv)
 {
@@ -238,41 +238,41 @@ int main(int argc, char **argv)
 
     // Vitis hls 不支援 C++ Map 所以這邊要做一點轉換我把 C++ Map 轉成 Vector
     // Convert map to vector
-    std::vector<std::pair<int, Account>> vec(accmap.begin(), accmap.end());
-    std::vector<int> account_vector;
+    // std::vector<std::pair<int, Account>> vec(accmap.begin(), accmap.end());
+    // std::vector<int> account_vector;
 
-    for (const auto &pair : vec)
-    {
-        account_vector.push_back(pair.second.account_no); // 先加帳號
-        account_vector.push_back(pair.second.amt);        // 再加額度
-    }
+    // for (const auto &pair : vec)
+    // {
+    //     account_vector.push_back(pair.second.account_no); // 先加帳號
+    //     account_vector.push_back(pair.second.amt);        // 再加額度
+    // }
 
-    std::vector<std::pair<int, Stock>> vec2(stockmap.begin(), stockmap.end());
-    std::vector<int> stock_vector;
-    for (const auto &pair2 : vec2)
-    {
-        stock_vector.push_back(pair2.second.account_no);
-        stock_vector.push_back(pair2.second.stockno);
-        stock_vector.push_back(pair2.second.qty);
-    }
+    // std::vector<std::pair<int, Stock>> vec2(stockmap.begin(), stockmap.end());
+    // std::vector<int> stock_vector;
+    // for (const auto &pair2 : vec2)
+    // {
+    //     stock_vector.push_back(pair2.second.account_no);
+    //     stock_vector.push_back(pair2.second.stockno);
+    //     stock_vector.push_back(pair2.second.qty);
+    // }
 
-    std::cout << "帳號跟額度:" << std::endl;
-    for (size_t i = 0; i < account_vector.size(); ++i)
-    {
-        std::cout << account_vector[i] << std::endl;
-        // if ((i + 1) % 10 == 0)
-        //     std::cout << std::endl;
-    }
+    // std::cout << "帳號跟額度:" << std::endl;
+    // for (size_t i = 0; i < account_vector.size(); ++i)
+    // {
+    //     std::cout << account_vector[i] << std::endl;
+    //     // if ((i + 1) % 10 == 0)
+    //     //     std::cout << std::endl;
+    // }
 
     // SearchAmt(account_vector, 666);
 
-    std::cout << "庫存:" << std::endl;
-    for (size_t i = 0; i < stock_vector.size(); ++i)
-    {
-        std::cout << stock_vector[i] << std::endl;
-        // if ((i + 1) % 10 == 0)
-        //     std::cout << std::endl;
-    }
+    // std::cout << "庫存:" << std::endl;
+    // for (size_t i = 0; i < stock_vector.size(); ++i)
+    // {
+    //     std::cout << stock_vector[i] << std::endl;
+    //     // if ((i + 1) % 10 == 0)
+    //     //     std::cout << std::endl;
+    // }
 
     // Command Line Parser
     sda::utils::CmdLineParser parser;
@@ -300,27 +300,50 @@ int main(int argc, char **argv)
 
     size_t vector_size_bytes = sizeof(int) * DATA_SIZE;
 
-    // auto krnl = xrt::kernel(device, uuid, "krnl_vadd");
     auto krnl = xrt::kernel(device, uuid, "riskcontrol");
+
+    // 把本地的資料COPY到裝置
+    xrt::bo::flags host_flags = xrt::bo::flags::host_only;
+    xrt::bo::flags device_flags = xrt::bo::flags::device_only;
+
+    auto hostonly_bo1 = xrt::bo(device, vector_size_bytes, host_flags, krnl.group_id(1));
+    auto hostonly_bo2 = xrt::bo(device, vector_size_bytes, host_flags, krnl.group_id(2));
+
+    auto deviceonly_bo1 = xrt::bo(device, vector_size_bytes, device_flags, krnl.group_id(1));
+    auto deviceonly_bo2 = xrt::bo(device, vector_size_bytes, device_flags, krnl.group_id(2));
 
     std::cout << "Allocate Buffer in Global Memory\n";
     auto device_order_data = xrt::bo(device, vector_size_bytes, krnl.group_id(0));
-    auto device_account_vector = xrt::bo(device, vector_size_bytes, krnl.group_id(1));
-    auto device_stock_vector = xrt::bo(device, vector_size_bytes, krnl.group_id(2));
+    // auto device_account_vector = xrt::bo(device, vector_size_bytes, krnl.group_id(1));
+    // auto device_stock_vector = xrt::bo(device, vector_size_bytes, krnl.group_id(2));
     auto device_stock_result = xrt::bo(device, vector_size_bytes, krnl.group_id(3));
     auto device_qty_result = xrt::bo(device, vector_size_bytes, krnl.group_id(4));
     auto device_price_result = xrt::bo(device, vector_size_bytes, krnl.group_id(5));
 
-    // copy 需要研究一下
-    // device_account_vector.copy(account_vector);
-    // device_stock_vector.copy(stock_vector);
+    // 把資料庫資料寫入
+    std::vector<std::pair<int, Account>> vec(accmap.begin(), accmap.end());
+    for (auto &pair : vec)
+    {
+        int *amt = &pair.second.amt;
+        hostonly_bo1.write(amt); // 額度
+    }
+    std::vector<std::pair<int, Stock>> vec2(stockmap.begin(), stockmap.end());
+    for (auto &pair2 : vec2)
+    {
+        int *qty = &pair2.second.qty;
+        hostonly_bo2.write(qty);
+    }
+
+    // 本地資料複製到裝置
+    deviceonly_bo1.copy(hostonly_bo1);
+    deviceonly_bo2.copy(hostonly_bo2);
 
     // Write 沒辦法把 vector 放進去 需要轉換成 array 的型態
-    int *a = &account_vector[0];
-    int *b = &stock_vector[0];
+    // int *a = &account_vector[0];
+    // int *b = &stock_vector[0];
     device_order_data.write(orderlist);
-    device_account_vector.write(a);
-    device_stock_vector.write(b);
+    // device_account_vector.write(a);
+    // device_stock_vector.write(b);
 
     // 把硬體結果接回來本地
     auto stock_result = device_stock_result.map<int *>();
@@ -331,11 +354,11 @@ int main(int argc, char **argv)
     std::cout << "synchronize input buffer data to device global memory\n";
 
     device_order_data.sync(XCL_BO_SYNC_BO_TO_DEVICE);
-    device_account_vector.sync(XCL_BO_SYNC_BO_TO_DEVICE);
-    device_stock_vector.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+    // device_account_vector.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+    // device_stock_vector.sync(XCL_BO_SYNC_BO_TO_DEVICE);
 
     std::cout << "Execution of the kernel\n";
-    auto run = krnl(device_order_data, device_account_vector, device_stock_vector, device_stock_result, device_qty_result, device_price_result);
+    auto run = krnl(device_order_data, deviceonly_bo1, deviceonly_bo2, device_stock_result, device_qty_result, device_price_result);
     run.wait();
 
     // Get the output;
