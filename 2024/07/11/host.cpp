@@ -21,29 +21,23 @@ using namespace std;
 #define DATA_SIZE 256
 
 MYSQL *conndb;
-struct Account
-{
-    int account_no;
-    int amt;
-};
-
-struct Stock
-{
-    int account_no;
-    int stockno;
-    int qty;
-};
 
 struct Order
 {
     int stockno;
     int price;
     int qty;
+    int bs;
 };
 
-int ConnectDB();
-int QueryAccount(map<int, Account> *accmap);
-int QueryStock(map<int, Stock> *stockmap);
+struct Limit
+{
+    int stockno;
+    int qty;
+};
+
+Order sw_orderlist[10];
+Limit sw_limitlist[10];
 
 int ConnectDB()
 {
@@ -55,68 +49,6 @@ int ConnectDB()
         mysql_close(conndb);
         return -1;
     }
-    return 0;
-}
-
-int QueryAccount(map<int, Account> *accmap)
-{
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    stringstream sql_query;
-    sql_query.str(""); // 字串流清零，將流中的資料全部清除
-    sql_query.clear();
-    sql_query << "SELECT * FROM `TestAccount`";
-    if (mysql_real_query(conndb, sql_query.str().c_str(), sql_query.str().length()))
-    {
-        cout << "QueryAccount ERROR: " << string(mysql_error(conndb)) << endl;
-        cout << "ERROR query:" << sql_query.str() << endl;
-        return -1;
-    }
-
-    res = mysql_use_result(conndb);
-    Account a;
-
-    while ((row = mysql_fetch_row(res)) != NULL)
-    {
-        a.account_no = atoi(row[0]);
-        a.amt = atoi(row[1]);
-        accmap->insert(std::pair<int, Account>(a.account_no, a));
-    }
-    mysql_free_result(res);
-    return 0;
-}
-
-int QueryStock(map<int, Stock> *stockmap)
-{
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    stringstream sql_query;
-    sql_query.str(""); // 字串流清零，將流中的資料全部清除
-    sql_query.clear();
-    sql_query << "SELECT * FROM `TestStock`";
-    if (mysql_real_query(conndb, sql_query.str().c_str(), sql_query.str().length()))
-    {
-        cout << "QueryStock ERROR: " << string(mysql_error(conndb)) << endl;
-        cout << "ERROR query:" << sql_query.str() << endl;
-        return -1;
-    }
-
-    res = mysql_use_result(conndb);
-    Stock s;
-    string key;
-    while ((row = mysql_fetch_row(res)) != NULL)
-    {
-        s.account_no = atoi(row[0]);
-        s.stockno = atoi(row[1]);
-        s.qty = atoi(row[2]);
-        std::stringstream ss;
-        ss.str("");
-        ss.clear();
-        ss << s.account_no << s.stockno;
-        key = ss.str();
-        stockmap->insert(std::pair<int, Stock>(atoi(key.c_str()), s));
-    }
-    mysql_free_result(res);
     return 0;
 }
 
@@ -145,12 +77,50 @@ int QueryOrder(int64_t *list)
         order_obj.stockno = atoi(row[0]);
         order_obj.price = atoi(row[1]);
         order_obj.qty = atoi(row[2]);
+        order_obj.bs = atoi(row[3]);
         std::stringstream ss;
         ss.str("");
         ss.clear();
-        ss << order_obj.stockno << order_obj.price << order_obj.qty;
+        ss << order_obj.stockno << order_obj.price << order_obj.qty << order_obj.bs;
         cout << "Order data:[" << ss.str() << "]" << endl;
         list[i] = atoll(ss.str().c_str());
+        sw_orderlist[i] = order_obj;
+        i++;
+    }
+    mysql_free_result(res);
+    return 0;
+}
+
+int QueryLimit(int64_t *list)
+{
+    int i = 0;
+    MYSQL_RES *res;
+    MYSQL_ROW row;
+    stringstream sql_query;
+    sql_query.str(""); // 字串流清零，將流中的資料全部清除
+    sql_query.clear();
+    sql_query << "SELECT * FROM `Limit`";
+    if (mysql_real_query(conndb, sql_query.str().c_str(), sql_query.str().length()))
+    {
+        cout << "QueryLimit ERROR: " << string(mysql_error(conndb)) << endl;
+        cout << "ERROR query:" << sql_query.str() << endl;
+        return -1;
+    }
+
+    res = mysql_use_result(conndb);
+    Limit limit_obj;
+    while ((row = mysql_fetch_row(res)) != NULL)
+    {
+
+        limit_obj.stockno = atoi(row[0]);
+        limit_obj.qty = atoi(row[1]);
+        std::stringstream ss;
+        ss.str("");
+        ss.clear();
+        ss << limit_obj.stockno << limit_obj.qty;
+        cout << "Limit data:[" << ss.str() << "]" << endl;
+        list[i] = atoll(ss.str().c_str());
+        sw_limitlist[i] = limit_obj;
         i++;
     }
     mysql_free_result(res);
@@ -188,43 +158,14 @@ int SearchAmt(std::vector<int> account_vector, int account)
 
 int main(int argc, char **argv)
 {
-    map<int, Account> accmap;
-    map<int, Stock> stockmap;
     int64_t orderlist[100];
+    int64_t limitlist[100];
     int status;
     status = ConnectDB();
     if (status != 0)
     {
         cout << "status=" << status << endl;
         exit(1);
-    }
-
-    status = QueryAccount(&accmap);
-    if (status != 0)
-    {
-        cout << "status=" << status << endl;
-        exit(1);
-    }
-    else
-    {
-        for (auto it = accmap.cbegin(); it != accmap.cend(); ++it)
-        {
-            cout << "key=[" << it->first << "]帳號:" << it->second.account_no << " 額度:" << it->second.amt << endl;
-        }
-    }
-
-    status = QueryStock(&stockmap);
-    if (status != 0)
-    {
-        cout << "status=" << status << endl;
-        exit(1);
-    }
-    else
-    {
-        for (auto it = stockmap.cbegin(); it != stockmap.cend(); ++it)
-        {
-            cout << "key=[" << it->first << "]帳號:" << it->second.account_no << " 股票:" << it->second.stockno << " 庫存:" << it->second.qty << endl;
-        }
     }
 
     status = QueryOrder(orderlist);
@@ -234,45 +175,43 @@ int main(int argc, char **argv)
         exit(1);
     }
 
+    status = QueryLimit(limitlist);
+    if (status != 0)
+    {
+        cout << "status=" << status << endl;
+        exit(1);
+    }
+
     //------以上從資料庫拿完資料------//
 
-    // Vitis hls 不支援 C++ Map 所以這邊要做一點轉換我把 C++ Map 轉成 Vector
-    // Convert map to vector
-    // std::vector<std::pair<int, Account>> vec(accmap.begin(), accmap.end());
-    // std::vector<int> account_vector;
-
-    // for (const auto &pair : vec)
-    // {
-    //     account_vector.push_back(pair.second.account_no); // 先加帳號
-    //     account_vector.push_back(pair.second.amt);        // 再加額度
-    // }
-
-    // std::vector<std::pair<int, Stock>> vec2(stockmap.begin(), stockmap.end());
-    // std::vector<int> stock_vector;
-    // for (const auto &pair2 : vec2)
-    // {
-    //     stock_vector.push_back(pair2.second.account_no);
-    //     stock_vector.push_back(pair2.second.stockno);
-    //     stock_vector.push_back(pair2.second.qty);
-    // }
-
-    // std::cout << "帳號跟額度:" << std::endl;
-    // for (size_t i = 0; i < account_vector.size(); ++i)
-    // {
-    //     std::cout << account_vector[i] << std::endl;
-    //     // if ((i + 1) % 10 == 0)
-    //     //     std::cout << std::endl;
-    // }
-
-    // SearchAmt(account_vector, 666);
-
-    // std::cout << "庫存:" << std::endl;
-    // for (size_t i = 0; i < stock_vector.size(); ++i)
-    // {
-    //     std::cout << stock_vector[i] << std::endl;
-    //     // if ((i + 1) % 10 == 0)
-    //     //     std::cout << std::endl;
-    // }
+    int sw_ans[9];
+    for (int i = 0; i <= 9; i++)
+    {
+        if (sw_orderlist[i].bs == 1)
+        {
+            if (5000000 < sw_orderlist[i].qty * sw_orderlist[i].price)
+            {
+                sw_ans[i] = 1;
+            } else {
+                sw_ans[i] = 0;
+            }
+        }
+        else
+        {
+            if (sw_limitlist[i].stockno == sw_orderlist[i].stockno)
+            {
+                if (sw_limitlist[i].qty < sw_orderlist[i].qty)
+                {
+                    sw_ans[i] = 1;
+                }
+                else
+                {
+                    sw_ans[i] = 0;
+                }
+            }
+        }
+        cout << "ANS:[" << sw_ans[i] << "]" << endl;
+    }
 
     // Command Line Parser
     sda::utils::CmdLineParser parser;
@@ -302,94 +241,44 @@ int main(int argc, char **argv)
 
     auto krnl = xrt::kernel(device, uuid, "riskcontrol");
 
-    // 把本地的資料COPY到裝置
-    xrt::bo::flags host_flags = xrt::bo::flags::host_only;
-    xrt::bo::flags device_flags = xrt::bo::flags::device_only;
-
-    auto hostonly_bo1 = xrt::bo(device, vector_size_bytes, host_flags, krnl.group_id(1));
-    auto hostonly_bo2 = xrt::bo(device, vector_size_bytes, host_flags, krnl.group_id(2));
-
-    auto deviceonly_bo1 = xrt::bo(device, vector_size_bytes, device_flags, krnl.group_id(1));
-    auto deviceonly_bo2 = xrt::bo(device, vector_size_bytes, device_flags, krnl.group_id(2));
-
     std::cout << "Allocate Buffer in Global Memory\n";
     auto device_order_data = xrt::bo(device, vector_size_bytes, krnl.group_id(0));
-    // auto device_account_vector = xrt::bo(device, vector_size_bytes, krnl.group_id(1));
-    // auto device_stock_vector = xrt::bo(device, vector_size_bytes, krnl.group_id(2));
-    auto device_stock_result = xrt::bo(device, vector_size_bytes, krnl.group_id(3));
-    auto device_qty_result = xrt::bo(device, vector_size_bytes, krnl.group_id(4));
-    auto device_price_result = xrt::bo(device, vector_size_bytes, krnl.group_id(5));
+    auto device_result = xrt::bo(device, vector_size_bytes, krnl.group_id(1));
 
-    // 把資料庫資料寫入
-    std::vector<std::pair<int, Account>> vec(accmap.begin(), accmap.end());
-    for (auto &pair : vec)
-    {
-        int *amt = &pair.second.amt;
-        hostonly_bo1.write(amt); // 額度
-    }
-    std::vector<std::pair<int, Stock>> vec2(stockmap.begin(), stockmap.end());
-    for (auto &pair2 : vec2)
-    {
-        int *qty = &pair2.second.qty;
-        hostonly_bo2.write(qty);
-    }
-
-    // 本地資料複製到裝置
-    deviceonly_bo1.copy(hostonly_bo1);
-    deviceonly_bo2.copy(hostonly_bo2);
-
-    // Write 沒辦法把 vector 放進去 需要轉換成 array 的型態
-    // int *a = &account_vector[0];
-    // int *b = &stock_vector[0];
     device_order_data.write(orderlist);
-    // device_account_vector.write(a);
-    // device_stock_vector.write(b);
 
     // 把硬體結果接回來本地
-    auto stock_result = device_stock_result.map<int *>();
-    auto qty_result = device_qty_result.map<int *>();
-    auto price_result = device_price_result.map<int *>();
+    auto result = device_result.map<int *>();
 
     // Synchronize buffer content with device side
     std::cout << "synchronize input buffer data to device global memory\n";
 
     device_order_data.sync(XCL_BO_SYNC_BO_TO_DEVICE);
-    // device_account_vector.sync(XCL_BO_SYNC_BO_TO_DEVICE);
-    // device_stock_vector.sync(XCL_BO_SYNC_BO_TO_DEVICE);
 
     std::cout << "Execution of the kernel\n";
-    auto run = krnl(device_order_data, deviceonly_bo1, deviceonly_bo2, device_stock_result, device_qty_result, device_price_result);
+    auto run = krnl(device_order_data, device_result);
     run.wait();
 
     // Get the output;
     std::cout << "Get the output data from the device" << std::endl;
-    device_stock_result.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
-    device_qty_result.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
-    device_price_result.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
-
-    int bufReferencestock[DATA_SIZE];
-    int bufReferenceqty[DATA_SIZE];
-    int bufReferenceprice[DATA_SIZE];
-    for (int i = 0; i < DATA_SIZE; ++i)
-    {
-    }
+    device_result.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
 
     // memcmp 是用來判斷兩段記憶體區塊內容是否相同的函式
-    int ret = std::memcmp(stock_result, bufReferencestock, DATA_SIZE);
-    if (ret > 0)
-    {
-        std::cout << "device_stock_result is greater than bufReference" << std::endl;
-    }
-    else if (ret < 0)
-    {
-        std::cout << "device_stock_result is less than bufReference" << std::endl;
-    }
-    else
-    {
-        std::cout << "結果一樣?" << std::endl;
-    }
-    std::cout << "bufReference=" << &bufReferencestock << std::endl;
-    std::cout << "device_stock_result=" << &device_stock_result << std::endl;
+    // int ret = std::memcmp(device_result, bufReferencestock, DATA_SIZE);
+    // if (ret > 0)
+    // {
+    //     std::cout << "device_result is greater than bufReference" << std::endl;
+    // }
+    // else if (ret < 0)
+    // {
+    //     std::cout << "device_result is less than bufReference" << std::endl;
+    // }
+    // else
+    // {
+    //     std::cout << "結果一樣?" << std::endl;
+    // }
+    // std::cout << "bufReference=" << &bufReferencestock << std::endl;
+    // std::cout << "device_result=" << &device_result << std::endl;
 
     std::cout << "TEST PASSED\n";
     return 0;
