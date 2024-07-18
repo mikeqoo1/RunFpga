@@ -44,12 +44,16 @@ execute:
             else
                 outStream.write(0);
         }
-        else
+        else if (tempbs == 2)
         { // 賣單檢查庫存
             if (initdata[i] < tempqty)
                 outStream.write(1);
             else
                 outStream.write(0);
+        }
+        else
+        {
+            outStream.write(0);
         }
     }
 }

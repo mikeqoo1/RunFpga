@@ -184,19 +184,21 @@ int main(int argc, char **argv)
 
     //------以上從資料庫拿完資料------//
 
-    int sw_ans[9];
-    for (int i = 0; i <= 9; i++)
+    int sw_ans[50];
+    for (int i = 0; i <= 50; i++)
     {
         if (sw_orderlist[i].bs == 1)
         {
             if (5000000 < sw_orderlist[i].qty * sw_orderlist[i].price)
             {
                 sw_ans[i] = 1;
-            } else {
+            }
+            else
+            {
                 sw_ans[i] = 0;
             }
         }
-        else
+        else if (sw_orderlist[i].bs == 2)
         {
             if (sw_limitlist[i].stockno == sw_orderlist[i].stockno)
             {
@@ -209,6 +211,10 @@ int main(int argc, char **argv)
                     sw_ans[i] = 0;
                 }
             }
+        }
+        else
+        {
+            sw_ans[i] = 0;
         }
         cout << "ANS:[" << sw_ans[i] << "]" << endl;
     }
@@ -264,21 +270,21 @@ int main(int argc, char **argv)
     device_result.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
 
     // memcmp 是用來判斷兩段記憶體區塊內容是否相同的函式
-    // int ret = std::memcmp(device_result, bufReferencestock, DATA_SIZE);
-    // if (ret > 0)
-    // {
-    //     std::cout << "device_result is greater than bufReference" << std::endl;
-    // }
-    // else if (ret < 0)
-    // {
-    //     std::cout << "device_result is less than bufReference" << std::endl;
-    // }
-    // else
-    // {
-    //     std::cout << "結果一樣?" << std::endl;
-    // }
-    // std::cout << "bufReference=" << &bufReferencestock << std::endl;
-    // std::cout << "device_result=" << &device_result << std::endl;
+    int ret = std::memcmp(result, sw_ans, DATA_SIZE);
+    if (ret > 0)
+    {
+        std::cout << "device_result is greater than bufReference" << std::endl;
+    }
+    else if (ret < 0)
+    {
+        std::cout << "device_result is less than bufReference" << std::endl;
+    }
+    else
+    {
+        std::cout << "結果一樣?" << std::endl;
+    }
+    std::cout << "bufReference=" << &sw_ans << std::endl;
+    std::cout << "device_result=" << &device_result << std::endl;
 
     std::cout << "TEST PASSED\n";
     return 0;

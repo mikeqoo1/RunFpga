@@ -1,11 +1,29 @@
 #include "hls.hpp"
 
+struct Order
+{
+    int stockno;
+    int price;
+    int qty;
+    int bs;
+};
+
+struct Limit
+{
+    int stockno;
+    int qty;
+};
+
 int main()
 {
     order_t all_order[customers_max];
+    Order orderlist[customers_max];
+    Limit limitlist[customers_max];
     for (int i = 0; i < customers_max; i++)
     {
         order_t order;
+        Order o;
+        Limit l;
         int stock = 0;
         int price = 0;
         int qty = 0;
@@ -16,16 +34,16 @@ int main()
             price = 10;
             qty = 1;
             bs = 1;
-            // user_sw.stock = stock;
-            // user_sw.price = price;
-            // user_sw.qty = qty;
-            // user_sw.bs = bs;
+            o.stockno = stock;
+            o.price = price;
+            o.qty = qty;
+            o.bs = bs;
             order(order_len - 1, price_len + qty_len + bs_len) = stock;
             order(price_len + qty_len + bs_len - 1, price_len) = price;
             order(qty_len + bs_len - 1, qty_len) = qty;
             order(bs_len - 1, 0) = bs;
-            // db(db_stock_len - 1, qty_len) = stock;
-            // db(qty_len - 1, 0) = qty;
+            l.stockno = stock;
+            l.qty = qty;
         }
         else if (i == 1)
         {
@@ -33,16 +51,16 @@ int main()
             price = 20;
             qty = 5;
             bs = 1;
-            // user_sw.stock = stock;
-            // user_sw.price = price;
-            // user_sw.qty = qty;
-            // user_sw.bs = bs;
+            o.stockno = stock;
+            o.price = price;
+            o.qty = qty;
+            o.bs = bs;
             order(order_len - 1, price_len + qty_len + bs_len) = stock;
             order(price_len + qty_len + bs_len - 1, price_len) = price;
             order(qty_len + bs_len - 1, qty_len) = qty;
             order(bs_len - 1, 0) = bs;
-            // db(db_stock_len - 1, qty_len) = stock;
-            // db(qty_len - 1, 0) = qty;
+            l.stockno = stock;
+            l.qty = qty;
         }
         else if (i == 2)
         {
@@ -50,16 +68,16 @@ int main()
             price = 500;
             qty = 3;
             bs = 1;
-            // user_sw.stock = stock;
-            // user_sw.price = price;
-            // user_sw.qty = qty;
-            // user_sw.bs = bs;
+            o.stockno = stock;
+            o.price = price;
+            o.qty = qty;
+            o.bs = bs;
             order(order_len - 1, price_len + qty_len + bs_len) = stock;
             order(price_len + qty_len + bs_len - 1, price_len) = price;
             order(qty_len + bs_len - 1, qty_len) = qty;
             order(bs_len - 1, 0) = bs;
-            // db(db_stock_len - 1, qty_len) = stock;
-            // db(qty_len - 1, 0) = qty;
+            l.stockno = stock;
+            l.qty = qty;
         }
         else if (i == 3)
         {
@@ -67,16 +85,16 @@ int main()
             price = 50;
             qty = 5;
             bs = 1;
-            // user_sw.stock = stock;
-            // user_sw.price = price;
-            // user_sw.qty = qty;
-            // user_sw.bs = bs;
+            o.stockno = stock;
+            o.price = price;
+            o.qty = qty;
+            o.bs = bs;
             order(order_len - 1, price_len + qty_len + bs_len) = stock;
             order(price_len + qty_len + bs_len - 1, price_len) = price;
             order(qty_len + bs_len - 1, qty_len) = qty;
             order(bs_len - 1, 0) = bs;
-            // db(db_stock_len - 1, qty_len) = stock;
-            // db(qty_len - 1, 0) = qty;
+            l.stockno = stock;
+            l.qty = qty;
         }
         else if (i == 4)
         {
@@ -84,16 +102,16 @@ int main()
             price = 58;
             qty = 3;
             bs = 1;
-            // user_sw.stock = stock;
-            // user_sw.price = price;
-            // user_sw.qty = qty;
-            // user_sw.bs = bs;
+            o.stockno = stock;
+            o.price = price;
+            o.qty = qty;
+            o.bs = bs;
             order(order_len - 1, price_len + qty_len + bs_len) = stock;
             order(price_len + qty_len + bs_len - 1, price_len) = price;
             order(qty_len + bs_len - 1, qty_len) = qty;
             order(bs_len - 1, 0) = bs;
-            // db(db_stock_len - 1, qty_len) = stock;
-            // db(qty_len - 1, 0) = qty;
+            l.stockno = stock;
+            l.qty = qty;
         }
         else if (i == 5)
         {
@@ -101,16 +119,16 @@ int main()
             price = 15;
             qty = 200;
             bs = 2;
-            // user_sw.stock = stock;
-            // user_sw.price = price;
-            // user_sw.qty = qty;
-            // user_sw.bs = bs;
+            o.stockno = stock;
+            o.price = price;
+            o.qty = qty;
+            o.bs = bs;
             order(order_len - 1, price_len + qty_len + bs_len) = stock;
             order(price_len + qty_len + bs_len - 1, price_len) = price;
             order(qty_len + bs_len - 1, qty_len) = qty;
             order(bs_len - 1, 0) = bs;
-            // db(db_stock_len - 1, qty_len) = stock;
-            // db(qty_len - 1, 0) = qty;
+            l.stockno = stock;
+            l.qty = qty;
         }
         else if (i == 6)
         {
@@ -118,16 +136,16 @@ int main()
             price = 1000;
             qty = 10;
             bs = 2;
-            // user_sw.stock = stock;
-            // user_sw.price = price;
-            // user_sw.qty = qty;
-            // user_sw.bs = bs;
+            o.stockno = stock;
+            o.price = price;
+            o.qty = qty;
+            o.bs = bs;
             order(order_len - 1, price_len + qty_len + bs_len) = stock;
             order(price_len + qty_len + bs_len - 1, price_len) = price;
             order(qty_len + bs_len - 1, qty_len) = qty;
             order(bs_len - 1, 0) = bs;
-            // db(db_stock_len - 1, qty_len) = stock;
-            // db(qty_len - 1, 0) = qty;
+            l.stockno = stock;
+            l.qty = qty;
         }
         else if (i == 7)
         {
@@ -135,16 +153,16 @@ int main()
             price = 11;
             qty = 50;
             bs = 2;
-            // user_sw.stock = stock;
-            // user_sw.price = price;
-            // user_sw.qty = qty;
-            // user_sw.bs = bs;
+            o.stockno = stock;
+            o.price = price;
+            o.qty = qty;
+            o.bs = bs;
             order(order_len - 1, price_len + qty_len + bs_len) = stock;
             order(price_len + qty_len + bs_len - 1, price_len) = price;
             order(qty_len + bs_len - 1, qty_len) = qty;
             order(bs_len - 1, 0) = bs;
-            // db(db_stock_len - 1, qty_len) = stock;
-            // db(qty_len - 1, 0) = qty;
+            l.stockno = stock;
+            l.qty = qty;
         }
         else if (i == 8)
         {
@@ -152,16 +170,16 @@ int main()
             price = 55;
             qty = 10;
             bs = 2;
-            // user_sw.stock = stock;
-            // user_sw.price = price;
-            // user_sw.qty = qty;
-            // user_sw.bs = bs;
+            o.stockno = stock;
+            o.price = price;
+            o.qty = qty;
+            o.bs = bs;
             order(order_len - 1, price_len + qty_len + bs_len) = stock;
             order(price_len + qty_len + bs_len - 1, price_len) = price;
             order(qty_len + bs_len - 1, qty_len) = qty;
             order(bs_len - 1, 0) = bs;
-            // db(db_stock_len - 1, qty_len) = stock;
-            // db(qty_len - 1, 0) = qty;
+            l.stockno = stock;
+            l.qty = qty;
         }
         else if (i == 9)
         {
@@ -169,29 +187,29 @@ int main()
             price = 22;
             qty = 66;
             bs = 2;
-            // user_sw.stock = stock;
-            // user_sw.price = price;
-            // user_sw.qty = qty;
-            // user_sw.bs = bs;
+            o.stockno = stock;
+            o.price = price;
+            o.qty = qty;
+            o.bs = bs;
             order(order_len - 1, price_len + qty_len + bs_len) = stock;
             order(price_len + qty_len + bs_len - 1, price_len) = price;
             order(qty_len + bs_len - 1, qty_len) = qty;
             order(bs_len - 1, 0) = bs;
-            // db(db_stock_len - 1, qty_len) = stock;
-            // db(qty_len - 1, 0) = qty;
+            l.stockno = stock;
+            l.qty = qty;
         }
         else
         {
-            // user_sw.stock = stock;
-            // user_sw.price = price;
-            // user_sw.qty = qty;
-            // user_sw.bs = bs;
+            o.stockno = stock;
+            o.price = price;
+            o.qty = qty;
+            o.bs = bs;
             order(order_len - 1, price_len + qty_len + bs_len) = stock;
             order(price_len + qty_len + bs_len - 1, price_len) = price;
             order(qty_len + bs_len - 1, qty_len) = qty;
             order(bs_len - 1, 0) = bs;
-            // db(db_stock_len - 1, qty_len) = stock;
-            // db(qty_len - 1, 0) = qty;
+            l.stockno = stock;
+            l.qty = qty;
         }
 
         // 從 user 中拿出 stock price 和 qty
@@ -207,13 +225,46 @@ int main()
             // printf("DB_Stock i=%d, db:%d, stock:%d, qty:%d\n", i, db, ddd, bbb);
         }
         all_order[i] = order;
+        orderlist[i] = o;
+        limitlist[i] = l;
     }
 
     int out[customers_max] = {0};
     riskcontrol(all_order, out, customers_max);
     for (int i = 0; i < customers_max; i++)
     {
-        printf("%d\n", out[i]);
+        int swans;
+        if (orderlist[i].bs == 1)
+        {
+            if (5000000 < orderlist[i].qty * orderlist[i].price)
+            {
+                swans = 1;
+            }
+            else
+            {
+                swans = 0;
+            }
+        }
+        else if (orderlist[i].bs == 2)
+        {
+            if (limitlist[i].qty < orderlist[i].qty)
+            {
+                swans = 1;
+            }
+            else
+            {
+                swans = 0;
+            }
+        }
+        else
+        {
+            swans = 0;
+        }
+
+        if (out[i] != swans)
+        {
+            printf("仿真模擬失敗 軟體結果:%d 硬體結果:%d\n", swans, out[i]);
+        }
     }
 
     uint32_t IPVal = 0X0A0C0300;
