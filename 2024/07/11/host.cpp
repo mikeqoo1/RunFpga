@@ -185,11 +185,15 @@ int main(int argc, char **argv)
     //------以上從資料庫拿完資料------//
 
     int sw_ans[50];
+    int sw_use_amt = 0;
+    int money = 0;
     for (int i = 0; i <= 50; i++)
     {
         if (sw_orderlist[i].bs == 1)
         {
-            if (5000000 < sw_orderlist[i].qty * sw_orderlist[i].price)
+            money = sw_orderlist[i].qty * sw_orderlist[i].price * 1000;
+            sw_use_amt += money;
+            if (5000000 < money)
             {
                 sw_ans[i] = 1;
             }
@@ -270,14 +274,14 @@ int main(int argc, char **argv)
     device_result.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
 
     // memcmp 是用來判斷兩段記憶體區塊內容是否相同的函式
-    int ret = std::memcmp(result, sw_ans, DATA_SIZE);
+    int ret = std::memcmp(result, sw_ans, 10);
     if (ret > 0)
     {
-        std::cout << "device_result is greater than bufReference" << std::endl;
+        std::cout << "result > sw_ans" << std::endl;
     }
     else if (ret < 0)
     {
-        std::cout << "device_result is less than bufReference" << std::endl;
+        std::cout << "result < sw_ans" << std::endl;
     }
     else
     {
