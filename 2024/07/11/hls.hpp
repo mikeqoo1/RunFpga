@@ -16,6 +16,8 @@ typedef ap_uint<qty_len> qty_t;
 typedef ap_uint<price_len> price_t;
 typedef ap_uint<bs_len> bs_t;
 
+static int use_amt = 0;
+
 // 預設最大處理數量
 const int customers_max = 50;
 

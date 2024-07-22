@@ -32,20 +32,22 @@ execute:
         // printf("qty: [%d] \n", tempqty);
         bs_t tempbs = order(bs_len - 1, 0);
         // printf("bs: [%d] \n", tempbs);
-        money = tempqty * tempprice;
+        money = tempqty * tempprice * 1000;
         // printf("money: [%d] \n", money);
-        if (i == 0)
+        if (i == 0 || i == 1 || i == 2 || i == 3 || i == 4 || i == 5 || i == 6 || i == 7 || i == 8 || i == 9)
             printf("dataassign i=%d 資料: [%d] stock: [%d] price: [%d] qty: [%d] bs: [%d]\n", i, order, tempstock, tempprice, tempqty, tempbs);
 
-        if (tempbs == 1)
-        { // 買單檢查額度
-            if (5000000 < money)
+        if (tempbs == 1) // 買單檢查額度
+        {
+            use_amt += money;
+            printf("單筆價金 i=%d 已用投資額度 i=%d \n", money, use_amt);
+            if (5000000 < use_amt)
                 outStream.write(1);
             else
                 outStream.write(0);
         }
-        else if (tempbs == 2)
-        { // 賣單檢查庫存
+        else if (tempbs == 2) // 賣單檢查庫存
+        {
             if (initdata[i] < tempqty)
                 outStream.write(1);
             else
@@ -77,7 +79,7 @@ extern "C"
 #pragma HLS INTERFACE m_axi port = customer_ans bundle = gmem0 depth = 32
         static hls::stream<order_t> customers_in("input_stream");
         static hls::stream<int> customers_out("output_stream");
-        int initdata[] = {0, 10, 30, 4, 6, 1000, 1, 3, 40, 77};
+        int initdata[] = {0, 10, 30, 4, 6, 1000, 10, 3, 40, 77};
 #pragma HLS STREAM variable = customers_in depth = 32
 #pragma HLS STREAM variable = customers_out depth = 32
 
