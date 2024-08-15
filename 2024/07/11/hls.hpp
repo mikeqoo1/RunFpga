@@ -19,16 +19,16 @@ typedef ap_uint<bs_len> bs_t;
 static int use_amt = 0;
 
 // 預設最大處理數量
-const int customers_max = 50;
+const int order_record_max = 50;
 
 // 讀取客戶資料
-static void read_input(order_t *customer_data, hls::stream<order_t> &inStream, int number_of_customer);
+static void read_input(order_t *customer_data, hls::stream<order_t> &inStream, int order_record);
 
 // 判斷資料
-static void compare(int *initdata, hls::stream<order_t> &inStream, hls::stream<int> &outStream, int number_of_customer);
+static void compare(int *initdata, hls::stream<order_t> &inStream, hls::stream<int> &outStream, int order_record);
 
 // 回傳對應的結果
-static void write_result(int *customer_ans, hls::stream<int> &outStream, int number_of_customer);
+static void write_result(int *customer_ans, hls::stream<int> &outStream, int order_record);
 
 extern "C"
 {

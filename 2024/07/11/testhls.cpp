@@ -16,10 +16,10 @@ struct Limit
 
 int main()
 {
-    order_t all_order[customers_max];
-    Order orderlist[customers_max];
-    Limit limitlist[customers_max];
-    for (int i = 0; i < customers_max; i++)
+    order_t all_order[order_record_max];
+    Order orderlist[order_record_max];
+    Limit limitlist[order_record_max];
+    for (int i = 0; i < order_record_max; i++)
     {
         order_t order;
         Order o;
@@ -229,11 +229,11 @@ int main()
         limitlist[i] = l;
     }
 
-    int out[customers_max] = {0};
-    riskcontrol(all_order, out, customers_max);
+    int out[order_record_max] = {0};
+    riskcontrol(all_order, out, order_record_max);
     int sw_use_amt = 0;
     int money = 0;
-    for (int i = 0; i < customers_max; i++)
+    for (int i = 0; i < order_record_max; i++)
     {
         int swans;
         if (orderlist[i].bs == 1)

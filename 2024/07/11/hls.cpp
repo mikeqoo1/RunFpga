@@ -4,24 +4,24 @@
 using namespace hls;
 
 // 讀取客戶資料
-static void read_input(order_t *customer_data, hls::stream<order_t> &inStream, int number_of_customer)
+static void read_input(order_t *customer_data, hls::stream<order_t> &inStream, int order_record)
 {
 mem_rd:
-    for (int i = 0; i < number_of_customer; i++)
+    for (int i = 0; i < order_record; i++)
     {
-#pragma HLS LOOP_TRIPCOUNT min = customers_max max = customers_max
+#pragma HLS LOOP_TRIPCOUNT min = order_record_max max = order_record_max
         inStream << customer_data[i];
     }
 }
 
 // 判斷
-static void compare(int *initdata, hls::stream<order_t> &inStream, hls::stream<int> &outStream, int number_of_customer)
+static void compare(int *initdata, hls::stream<order_t> &inStream, hls::stream<int> &outStream, int order_record)
 {
 execute:
     int money = 0;
-    for (int i = 0; i < number_of_customer; i++)
+    for (int i = 0; i < order_record; i++)
     {
-#pragma HLS LOOP_TRIPCOUNT min = customers_max max = customers_max
+#pragma HLS LOOP_TRIPCOUNT min = order_record_max max = order_record_max
         order_t order = inStream.read();
         // printf("資料: [%d] \n", order);
         stock_t tempstock = order(stock_len + price_len + qty_len + bs_len - 1, price_len + qty_len + bs_len);
@@ -61,12 +61,12 @@ execute:
 }
 
 // 回傳對應的結果
-static void write_result(int *customer_ans, hls::stream<int> &outStream, int number_of_customer)
+static void write_result(int *customer_ans, hls::stream<int> &outStream, int order_record)
 {
 mem_wr:
-    for (int i = 0; i < number_of_customer; i++)
+    for (int i = 0; i < order_record; i++)
     {
-#pragma HLS LOOP_TRIPCOUNT min = customers_max max = customers_max
+#pragma HLS LOOP_TRIPCOUNT min = order_record_max max = order_record_max
         customer_ans[i] = outStream.read();
     }
 }
