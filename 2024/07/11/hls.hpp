@@ -32,5 +32,5 @@ static void write_result(int *customer_ans, hls::stream<int> &outStream, int ord
 
 extern "C"
 {
-    void riskcontrol(order_t *customer_data, int *customer_ans, int customers_number);
+    void riskcontrol(order_t *customer_data, int *customer_ans, int order_record);
 }

@@ -73,10 +73,10 @@ mem_wr:
 
 extern "C"
 {
-    void riskcontrol(order_t *customer_data, int *customer_ans, int customers_number)
+    void riskcontrol(order_t *customer_data, int *customer_ans, int order_record)
     {
-#pragma HLS INTERFACE m_axi port = customer_data bundle = gmem0 depth = 32
-#pragma HLS INTERFACE m_axi port = customer_ans bundle = gmem0 depth = 32
+#pragma HLS INTERFACE m_axi port = customer_data bundle = gmem0 depth = 64
+#pragma HLS INTERFACE m_axi port = customer_ans bundle = gmem0 depth = 64
         static hls::stream<order_t> customers_in("input_stream");
         static hls::stream<int> customers_out("output_stream");
         int initdata[] = {0, 10, 30, 4, 6, 1000, 10, 3, 40, 77};
@@ -84,8 +84,8 @@ extern "C"
 #pragma HLS STREAM variable = customers_out depth = 32
 
 #pragma HLS dataflow
-        read_input(customer_data, customers_in, customers_number);
-        compare(initdata, customers_in, customers_out, customers_number);
-        write_result(customer_ans, customers_out, customers_number);
+        read_input(customer_data, customers_in, order_record);
+        compare(initdata, customers_in, customers_out, order_record);
+        write_result(customer_ans, customers_out, order_record);
     }
 }
