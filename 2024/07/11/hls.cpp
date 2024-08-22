@@ -58,6 +58,60 @@ execute:
             outStream.write(0);
         }
     }
+    /* 非同步版本 失敗 */
+    /*
+execute:
+    int money = 0;
+    int i = 0;
+    int check = 0;
+    int index;
+    while (check != 0)
+    {
+        if (!inStream.empty())
+        {
+            order_t order;
+            if (inStream.read_nb(order))
+            {
+                //order_t order = inStream.read();
+                // printf("資料: [%d] \n", order);
+                stock_t tempstock = order(stock_len + price_len + qty_len + bs_len - 1, price_len + qty_len + bs_len);
+                // printf("stock: [%d] \n", tempstock);
+                price_t tempprice = order(price_len + qty_len + bs_len - 1, price_len);
+                // printf("price: [%d] \n", tempprice);
+                qty_t tempqty = order(qty_len + bs_len - 1, qty_len);
+                // printf("qty: [%d] \n", tempqty);
+                bs_t tempbs = order(bs_len - 1, 0);
+                // printf("bs: [%d] \n", tempbs);
+                money = tempqty * tempprice * 1000;
+                // printf("money: [%d] \n", money);
+                if (i == 0 || i == 1 || i == 2 || i == 3 || i == 4 || i == 5 || i == 6 || i == 7 || i == 8 || i == 9)
+                    printf("dataassign i=%d 資料: [%d] stock: [%d] price: [%d] qty: [%d] bs: [%d]\n", i, order, tempstock, tempprice, tempqty, tempbs);
+
+                if (tempbs == 1) // 買單檢查額度
+                {
+                    use_amt += money;
+                    printf("單筆價金 i=%d 已用投資額度 i=%d \n", money, use_amt);
+                    if (5000000 < use_amt)
+                        outStream.write(1);
+                    else
+                        outStream.write(0);
+                }
+                else if (tempbs == 2) // 賣單檢查庫存
+                {
+                    if (initdata[i] < tempqty)
+                        outStream.write(1);
+                    else
+                        outStream.write(0);
+                }
+                else
+                {
+                    outStream.write(0);
+                }
+            }
+        }
+        check = 1;
+    }
+    */
 }
 
 // 回傳對應的結果
@@ -69,6 +123,24 @@ mem_wr:
 #pragma HLS LOOP_TRIPCOUNT min = order_record_max max = order_record_max
         customer_ans[i] = outStream.read();
     }
+    /* 非同步版本 失敗 */
+    /*
+mem_wr:
+    int i = 0;
+    int check = 0;
+    while (check != 0)
+    {
+        if (!outStream.empty())
+        {
+            int ans;
+            if (outStream.read_nb(ans))
+            {
+                customer_ans[i] = ans;
+            }
+        }
+        check = 1;
+    }
+*/
 }
 
 extern "C"
